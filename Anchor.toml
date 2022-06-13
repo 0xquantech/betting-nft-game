@@ -1,0 +1,28 @@
+[features]
+seeds = false
+
+[test.validator]
+url = "https://api.metaplex.solana.com"
+
+# pyth_account
+[[test.validator.clone]]
+address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+
+[programs.localnet]
+betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+
+[programs.devnet]
+betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+
+[programs.mainnet]
+betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+
+[registry]
+url = "https://anchor.projectserum.com"
+
+[provider]
+cluster = "devnet"
+wallet = "/root/.config/solana/id.json"
+
+[scripts]
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
