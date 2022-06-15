@@ -9,13 +9,13 @@ url = "https://api.metaplex.solana.com"
 address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
 
 [programs.localnet]
-betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
 
 [programs.devnet]
-betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
 
 [programs.mainnet]
-betting = "mDGamKsUXBhGKr7AcwyUnAEvzZ5RMCyJMyJQhHWBNts"
+betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
 
 [registry]
 url = "https://anchor.projectserum.com"

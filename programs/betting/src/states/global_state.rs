@@ -10,6 +10,8 @@ pub struct GlobalState {
     pub pyth_account: Pubkey,
     pub token_mint: Pubkey,
     pub arena_duration: u64,
-    pub reward_fee_rate: u64,
-    pub referral_fee: u64,
+    pub platform_fee_rate: u64,
+    pub referral_fee_rate: u64,
+
+    pub reserves: [u64; 12],
 }

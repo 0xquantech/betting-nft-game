@@ -17,6 +17,9 @@ pub enum BettingError {
     #[msg("This Arena is finished")]
     FinishedArena,
 
+    #[msg("This Arena is not finished")]
+    ArenaNotFinished,
+
     #[msg("Incorrect Referrer")]
     ReferrerMisMatch,
 

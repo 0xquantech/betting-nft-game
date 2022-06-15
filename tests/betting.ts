@@ -49,19 +49,19 @@ describe("betting", () => {
   });
 
   it("UserA Bet to Up, 1000 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userA, arenaId, 1000, true /** up */);
+    const tx = await userBet(bettingAccounts, userA, userD.publicKey, arenaId, 1000, true /** up */);
   });
 
   it("UserB Bet to Up, 2000 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userB, arenaId, 2000, true /** up */);
+    const tx = await userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */);
   });
   
   it("FAIL: UserB double bet", async () => {
-    const tx = await userBet(bettingAccounts, userB, arenaId, 2000, true /** up */);
+    const tx = await userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */);
   });
 
   it("UserC Bet to Down, 1500 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userC, arenaId, 1500, false /** up */);
+    const tx = await userBet(bettingAccounts, userC, userD.publicKey, arenaId, 1500, false /** down */);
   });
 
   it("End Arena", async () => {
@@ -69,14 +69,14 @@ describe("betting", () => {
   });
 
   it("FAIL: UserD Bet to Down, 1500 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userD, arenaId, 1500, false /** up */);
+    const tx = await userBet(bettingAccounts, userD, admin.publicKey, arenaId, 1500, false /** down */);
   });
 
   it("UserA claim Reward", async () => {
-    const tx = await claimReward(bettingAccounts, userA, arenaId);
+    const tx = await claimReward(bettingAccounts, userA, userD, arenaId);
   })
 
   it("UserC claim Reward", async () => {
-    const tx = await claimReward(bettingAccounts, userC, arenaId);
+    const tx = await claimReward(bettingAccounts, userC, userD, arenaId);
   })
 });

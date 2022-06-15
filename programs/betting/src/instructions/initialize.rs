@@ -63,8 +63,8 @@ pub fn handler(ctx: Context<Initialize>, new_authority: Pubkey) -> Result<()> {
     accts.global_state.authority = new_authority;
     accts.global_state.treasury = accts.treasury.key();
     accts.global_state.pyth_account = accts.pyth_account.key();
-    accts.global_state.reward_fee_rate = INITIAL_DEFAULT_FEE_RATE;
-    accts.global_state.referral_fee = INITIAL_REF_FEE_RATE;
+    accts.global_state.platform_fee_rate = INITIAL_PLATFORM_FEE_RATE;
+    accts.global_state.referral_fee_rate = INITIAL_REF_FEE_RATE;
     accts.global_state.token_mint = accts.token_mint.key();
     Ok(())
 }

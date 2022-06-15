@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 
 use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
 use anchor_spl::{
-    associated_token::{self},
+    associated_token::{self, AssociatedToken},
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
@@ -48,8 +48,31 @@ pub struct ClaimReward<'info> {
     )]
     pub escrow_ata: Account<'info, TokenAccount>,
 
+    #[account(
+        mut,
+        seeds = [USER_STATE_SEED, user.key().as_ref()],
+        bump
+    )]
+    pub user_state: Box<Account<'info, UserState>>,
+
+    #[account(
+        mut,
+        seeds = [USER_STATE_SEED, user_state.referrer.as_ref()],
+        bump
+    )]
+    pub ref_user_state: Box<Account<'info, UserState>>,
+
+    #[account(
+        init_if_needed,
+        associated_token::mint = token_mint,
+        associated_token::authority = ref_user_state,
+        payer = user,
+    )]
+    pub ref_user_vault_ata: Box<Account<'info, TokenAccount>>,
+
     pub token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -59,6 +82,10 @@ impl<'info> ClaimReward<'info> {
         let current_time = Clock::get()?.unix_timestamp as u64;
         // require!(current_time > )
 
+        require!(
+            self.arena_state.finalized == 1 || self.arena_state.finalized == 2,
+            BettingError::ArenaNotFinished
+        );
         // check bet result
         require!(
             self.user_bet_state.is_up == self.arena_state.bet_result,
@@ -81,13 +108,33 @@ impl<'info> ClaimReward<'info> {
             },
         )
     }
+    fn take_referral_fee_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+        CpiContext::new(
+            self.token_program.to_account_info(),
+            Transfer {
+                from: self.escrow_ata.to_account_info(),
+                to: self.ref_user_vault_ata.to_account_info(),
+                authority: self.global_state.to_account_info(),
+            },
+        )
+    }
 }
 
 #[access_control(ctx.accounts.validate())]
 pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
-
+    if accts.arena_state.finalized == 2 {
+        let signer_seeds = &[
+            GLOBAL_STATE_SEED,
+            &[*(ctx.bumps.get("global_state").unwrap())],
+        ];
+        token::transfer(
+            accts.claim_reward_context().with_signer(&[signer_seeds]),
+            accts.user_bet_state.bet_amount,
+        )?;
+        return Ok(());
+    }
     let bet_total_amount = accts
         .arena_state
         .up_amount
@@ -95,7 +142,7 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
         .unwrap();
 
     let platform_fee = (bet_total_amount as u128)
-        .checked_mul(accts.global_state.reward_fee_rate as u128)
+        .checked_mul(accts.global_state.platform_fee_rate as u128)
         .unwrap()
         .checked_div(FEE_RATE_DENOMINATOR as u128)
         .unwrap();
@@ -114,7 +161,13 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
         .checked_mul(accts.user_bet_state.bet_amount as u128)
         .unwrap()
         .checked_div(total_user_success_bet as u128)
-        .unwrap() as u64;
+        .unwrap();
+
+    let ref_fee = user_reward
+    .checked_mul(accts.global_state.referral_fee_rate as u128).unwrap()
+    .checked_div(FEE_RATE_DENOMINATOR as u128).unwrap();
+
+    let real_reward = user_reward.checked_sub(ref_fee).unwrap() as u64;
 
     let signer_seeds = &[
         GLOBAL_STATE_SEED,
@@ -122,7 +175,13 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
     ];
     token::transfer(
         accts.claim_reward_context().with_signer(&[signer_seeds]),
-        user_reward,
+        real_reward,
     )?;
+    
+    token::transfer(
+        accts.take_referral_fee_context().with_signer(&[signer_seeds]),
+        ref_fee as u64,
+    )?;
+    
     Ok(())
 }

@@ -10,4 +10,6 @@ pub struct UserBetState {
     pub is_up: u8,
 
     pub is_claimed: u8,
+
+    pub reserves: [u64; 8],
 }
