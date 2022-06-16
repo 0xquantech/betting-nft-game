@@ -47,6 +47,25 @@ export const initializeProgram = async (accts: BettingAccounts, admin: User) => 
     connection
   );
 };
+
+export const openArena = async (accts: BettingAccounts, admin: User, arenaId: number) => {
+  await sendOrSimulateTransaction(await program.methods
+    .openArena(new BN(arenaId))
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      arenaState: await keys.getArenaStateKey(arenaId),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection,
+    true
+  );
+};
+
 export const startArena = async (accts: BettingAccounts, admin: User, arenaId: number) => {
   await sendOrSimulateTransaction(await program.methods
     .startArena(new BN(arenaId))

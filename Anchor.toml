@@ -21,7 +21,7 @@ betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "/root/.config/solana/id.json"
 
 [scripts]

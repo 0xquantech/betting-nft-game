@@ -10,6 +10,7 @@ import {
   claimReward,
   endArena,
   initializeProgram, startArena, userBet,
+  openArena,
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 
@@ -43,6 +44,10 @@ describe("betting", () => {
     // Add your test here.
     const tx = await initializeProgram(bettingAccounts, admin);
   });
+
+  it("Open Arena", async () => {
+    const tx = await openArena(bettingAccounts, admin, arenaId);
+  })
 
   it("Start Arena", async () => {
     const tx = await startArena(bettingAccounts, admin, arenaId);

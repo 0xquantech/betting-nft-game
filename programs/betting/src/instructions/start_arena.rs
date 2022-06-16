@@ -22,11 +22,9 @@ pub struct StartArena<'info> {
     pub global_state: Box<Account<'info, GlobalState>>,
 
     #[account(
-      init,
+      mut,
       seeds = [ARENA_STATE_SEED, &arena_id.to_le_bytes()],
-      bump,
-      payer = authority,
-      space = 8 + size_of::<ArenaState>()
+      bump
     )]
     pub arena_state: Box<Account<'info, ArenaState>>,
 
@@ -39,6 +37,7 @@ pub struct StartArena<'info> {
 
 impl<'info> StartArena<'info> {
     fn validate(&self) -> Result<()> {
+      require!(self.arena_state.status == ArenaStatus::Opened as u8, BettingError::FinishedArena);
         Ok(())
     }
 }
@@ -55,7 +54,8 @@ pub fn handler(ctx: Context<StartArena>, arena_id: u64) -> Result<()> {
     accts.arena_state.locked_price = pyth_price.agg.price as u64;
     accts.arena_state.start_timestamp = current_time;
     accts.arena_state.duration = accts.global_state.arena_duration;
-
+    accts.arena_state.status = ArenaStatus::Started as u8;
+    
     msg!("locked price = {:?}", accts.arena_state.locked_price);
 
     Ok(())

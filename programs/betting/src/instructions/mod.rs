@@ -1,6 +1,9 @@
 pub mod initialize;
 pub use initialize::*;
 
+pub mod open_arena;
+pub use open_arena::*;
+
 pub mod start_arena;
 pub use start_arena::*;
 

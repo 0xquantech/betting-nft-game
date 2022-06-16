@@ -22,9 +22,10 @@ import { createUserStateInstruction } from "./createUserState";
 
 import crypto from 'crypto';
 import { getHashArr } from "../tests/libs/utils";
+
 const connection = new Connection(clusterApiUrl("devnet"));
-// JAwNgkoSRMJzMndLtxBVSVp3ZPUfw1MEJ5GaAQ2gWcDT
-const user = anchor.web3.Keypair.fromSecretKey(bs58.decode("4DvzFh5zMD5pyx46Yvw2X6biMyFfTASEr7k7FfgPaCYfvVfKZkfpciiaESuUmNGyf5PHUqJMmFw4wLEqXeqBT9GZ"));
+// 36gJMRpN2dTyYegNBtTa5RvndhWr7vPL91E7hV5zcQKA
+const user = anchor.web3.Keypair.fromSecretKey(bs58.decode("3EFsWUQQuU32XaTrvhQGaYqUhWJiPayWA64CrU7f6cU7Jdbbm77tJE2y89DfByuFavp8X3jwAxuG4oxbDhYXcHJG"));
 let provider = new anchor.Provider(connection, new NodeWallet(user), anchor.Provider.defaultOptions())
 const program = new anchor.Program(IDL, Constants.PROGRAM_ID, provider);
 
@@ -77,4 +78,5 @@ const claimReward = async (
   console.log("txHash =", txHash);
   return txHash;
 }
-claimReward(0);
+
+claimReward(1);

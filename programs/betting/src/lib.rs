@@ -23,6 +23,10 @@ pub mod betting {
         initialize::handler(ctx, new_authority)
     }
 
+    pub fn open_arena(ctx: Context<OpenArena>, arena_id: u64) -> Result<()> {
+        open_arena::handler(ctx, arena_id)
+    }
+
     pub fn start_arena(ctx: Context<StartArena>, arena_id: u64) -> Result<()> {
         start_arena::handler(ctx, arena_id)
     }

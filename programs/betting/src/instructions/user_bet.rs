@@ -69,7 +69,7 @@ impl<'info> UserBet<'info> {
         let current_time = Clock::get()?.unix_timestamp as u64;
         // require!(current_time > )
         
-        require!(self.arena_state.finalized == 0, BettingError::FinishedArena);
+        require!(self.arena_state.status == ArenaStatus::Started as u8, BettingError::FinishedArena);
         if (self.user_state.is_ref_inited == 1) {
           require!(self.user_state.referrer.eq(&ref_key), BettingError::ReferrerMisMatch);
         }

@@ -64,6 +64,7 @@ pub struct EndArena<'info> {
 
 impl<'info> EndArena<'info> {
     fn validate(&self) -> Result<()> {
+        require!(self.arena_state.status == ArenaStatus::Started as u8, BettingError::ArenaNotStarted);
         Ok(())
     }
     // CHECK: when take fee
@@ -99,9 +100,9 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
         };
 
     if accts.arena_state.up_amount == 0 || accts.arena_state.down_amount == 0 {
-        accts.arena_state.finalized = 2;
+        accts.arena_state.status = ArenaStatus::EndFail as u8;
     } else {
-        accts.arena_state.finalized = 1;
+        accts.arena_state.status = ArenaStatus::EndSuccess as u8;
         msg!("locked price = {:?}", accts.arena_state.locked_price);
         msg!("final price = {:?}", accts.arena_state.final_price);
         msg!("bet_result = {:?}", accts.arena_state.bet_result);

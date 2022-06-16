@@ -43,4 +43,4 @@ const startArena = async (arenaId: number) => {
   console.log("txHash =", txHash);
 }
 
-startArena(0);
+startArena(1);

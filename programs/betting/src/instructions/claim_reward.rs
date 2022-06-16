@@ -83,7 +83,8 @@ impl<'info> ClaimReward<'info> {
         // require!(current_time > )
 
         require!(
-            self.arena_state.finalized == 1 || self.arena_state.finalized == 2,
+            self.arena_state.status == ArenaStatus::EndSuccess as u8 
+            || self.arena_state.status == ArenaStatus::EndFail as u8,
             BettingError::ArenaNotFinished
         );
         // check bet result
@@ -124,7 +125,7 @@ impl<'info> ClaimReward<'info> {
 pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
-    if accts.arena_state.finalized == 2 {
+    if accts.arena_state.status == ArenaStatus::EndFail as u8 {
         let signer_seeds = &[
             GLOBAL_STATE_SEED,
             &[*(ctx.bumps.get("global_state").unwrap())],
