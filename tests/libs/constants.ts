@@ -6,4 +6,4 @@ export const USER_BET_SEED = "USER_BET_SEED";
 
 export const USDC_DECIMALS = 6;
 
-export const TREASURY = "JAwNgkoSRMJzMndLtxBVSVp3ZPUfw1MEJ5GaAQ2gWcDT";
+export const TREASURY = "5de42qodN5hDg2yYWVzFcHsVzv2dNGLt29QymSeY1Pzn";

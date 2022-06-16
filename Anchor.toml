@@ -9,19 +9,19 @@ url = "https://api.metaplex.solana.com"
 address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
 
 [programs.localnet]
-betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
+betting = "DSouga7AdFCW4UXK2hTqrHtyxpDxFkih3xMSdT1xKyZ5"
 
 [programs.devnet]
-betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
+betting = "DSouga7AdFCW4UXK2hTqrHtyxpDxFkih3xMSdT1xKyZ5"
 
 [programs.mainnet]
-betting = "7RQaqufWuf9px2fz6Rc3z3XghhKn77Vwf7KTXGSNsqzH"
+betting = "DSouga7AdFCW4UXK2hTqrHtyxpDxFkih3xMSdT1xKyZ5"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "/root/.config/solana/id.json"
 
 [scripts]
