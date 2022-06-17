@@ -4,6 +4,7 @@ use anchor_lang::prelude::*;
 #[account]
 #[derive(Default)]
 pub struct ArenaState {
+    pub arena_id: u64,
     pub locked_price: u64,
     pub start_timestamp: u64,
     pub duration: u64,

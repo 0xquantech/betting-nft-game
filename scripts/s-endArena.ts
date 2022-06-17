@@ -58,4 +58,4 @@ const endArena = async (arenaId: number) => {
   console.log("txHash =", txHash);
 }
 
-endArena(1);
+endArena(0);

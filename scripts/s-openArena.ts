@@ -41,4 +41,4 @@ const w3_openArena = async (arenaId: number) => {
   console.log("txHash =", txHash);
 }
 
-w3_openArena(10);
+w3_openArena(0);

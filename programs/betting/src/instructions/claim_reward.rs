@@ -134,6 +134,7 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
             accts.claim_reward_context().with_signer(&[signer_seeds]),
             accts.user_bet_state.bet_amount,
         )?;
+        accts.user_bet_state.is_claimed = 1;
         return Ok(());
     }
     let bet_total_amount = accts
@@ -184,5 +185,6 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
         ref_fee as u64,
     )?;
     
+    accts.user_bet_state.is_claimed = 1;
     Ok(())
 }

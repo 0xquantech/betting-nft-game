@@ -69,7 +69,7 @@ impl<'info> UserBet<'info> {
         let current_time = Clock::get()?.unix_timestamp as u64;
         // require!(current_time > )
         
-        require!(self.arena_state.status == ArenaStatus::Started as u8, BettingError::FinishedArena);
+        require!(self.arena_state.status == ArenaStatus::Opened as u8, BettingError::ArenaNotOpened);
         if (self.user_state.is_ref_inited == 1) {
           require!(self.user_state.referrer.eq(&ref_key), BettingError::ReferrerMisMatch);
         }
@@ -92,6 +92,7 @@ impl<'info> UserBet<'info> {
 pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, is_up: u8, ref_key: Pubkey, hash_key: [u8; 32] ) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
+    accts.user_bet_state.user = accts.user.key();
     accts.user_bet_state.bet_timestamp = current_time;
     accts.user_bet_state.arena_id = arena_id;
     accts.user_bet_state.bet_amount = bet_amount;

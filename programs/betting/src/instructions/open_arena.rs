@@ -43,6 +43,7 @@ pub fn handler(ctx: Context<OpenArena>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
 
     let accts = ctx.accounts;
+    accts.arena_state.arena_id = arena_id;
     accts.arena_state.status = ArenaStatus::Opened as u8;
     Ok(())
 }

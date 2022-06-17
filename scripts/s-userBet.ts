@@ -74,7 +74,7 @@ const userBet = async (
     .rpc();
   return txHash;
 }
-const main = async () => {
+const main = async (arenaId: number) => {
   const refKey = new PublicKey("36gJMRpN2dTyYegNBtTa5RvndhWr7vPL91E7hV5zcQKA");
   const hash_str = crypto.createHash('sha256').update(
     user.publicKey.toBase58() + 
@@ -84,7 +84,7 @@ const main = async () => {
   let hash_arr = getHashArr(hash_str);
 
   let txHash = await userBet(
-    10, 
+    arenaId, 
     100,
     0, 
     refKey,
@@ -92,4 +92,5 @@ const main = async () => {
   );
   console.log("txHash =", txHash);
 }
-main();
+
+main(0);
