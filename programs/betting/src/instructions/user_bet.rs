@@ -9,7 +9,7 @@ use anchor_spl::{
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(arena_id: u64)]
+#[instruction(arena_id: u64, b: u64, hour: u64, day: u64, week: u64)]
 pub struct UserBet<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
@@ -45,6 +45,27 @@ pub struct UserBet<'info> {
 
     #[account(
       mut,
+      seeds = [HOUR_STATE_SEED, user.key().as_ref(), &hour.to_le_bytes()],
+      bump
+    )]
+    pub user_hour_state: Box<Account<'info, HourState>>,
+
+    #[account(
+      mut,
+      seeds = [DAY_STATE_SEED, user.key().as_ref(), &day.to_le_bytes()],
+      bump
+    )]
+    pub user_day_state: Box<Account<'info, DayState>>,
+
+    #[account(
+      mut,
+      seeds = [WEEK_STATE_SEED, user.key().as_ref(), &week.to_le_bytes()],
+      bump
+    )]
+    pub user_week_state: Box<Account<'info, WeekState>>,
+
+    #[account(
+      mut,
       associated_token::mint = token_mint,
       associated_token::authority = user
     )]
@@ -74,6 +95,20 @@ impl<'info> UserBet<'info> {
           require!(self.user_state.referrer.eq(&ref_key), BettingError::ReferrerMisMatch);
         }
         assert_ref_hash(self.user.key(), ref_key, hash_key)?;
+
+        // validate hour, day, week states
+        require!(self.user_hour_state.start_time < current_time 
+          && self.user_hour_state.start_time + ONE_HOUR >= current_time, 
+          BettingError::IncorrectHour);
+        
+        require!(self.user_day_state.start_time < current_time 
+          && self.user_day_state.start_time + ONE_DAY >= current_time, 
+          BettingError::IncorrectDay);
+
+        require!(self.user_week_state.start_time < current_time 
+          && self.user_week_state.start_time + ONE_WEEK >= current_time, 
+          BettingError::IncorrectWeek);
+
         Ok(())
     }
     fn bet_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
@@ -89,7 +124,7 @@ impl<'info> UserBet<'info> {
 }
 
 #[access_control(ctx.accounts.validate(ref_key, hash_key))]
-pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, is_up: u8, ref_key: Pubkey, hash_key: [u8; 32] ) -> Result<()> {
+pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, hour: u64, day: u64, week: u64, is_up: u8, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
     accts.user_bet_state.user = accts.user.key();
@@ -116,5 +151,9 @@ pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, is_up: u8,
     }
 
     token::transfer(accts.bet_context(), bet_amount)?;
+
+    accts.user_hour_state.bet_amount = accts.user_hour_state.bet_amount.checked_add(bet_amount).unwrap();
+    accts.user_day_state.bet_amount = accts.user_day_state.bet_amount.checked_add(bet_amount).unwrap();
+    accts.user_week_state.bet_amount = accts.user_week_state.bet_amount.checked_add(bet_amount).unwrap();
     Ok(())
 }

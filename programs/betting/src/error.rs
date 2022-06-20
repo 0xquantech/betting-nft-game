@@ -32,6 +32,15 @@ pub enum BettingError {
     #[msg("Incorrect Referrer Hash")]
     InvalidReferrerHash,
 
+    #[msg("Incorrect Hour")]
+    IncorrectHour,
+
+    #[msg("Incorrect Day")]
+    IncorrectDay,
+
+    #[msg("Incorrect Week")]
+    IncorrectWeek,
+
     #[msg("Reduce amount exceeds deposit amount")]
     ReduceAmountExceed,
 

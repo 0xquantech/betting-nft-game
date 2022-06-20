@@ -72,5 +72,7 @@ pub fn handler(ctx: Context<ClaimReferralReward>) -> Result<()> {
         accts.claim_referral_context().with_signer(&[signer_seeds]),
         accts.user_vault_ata.amount,
     )?;
+
+    accts.user_state.ref_reward = 0;
     Ok(())
 }

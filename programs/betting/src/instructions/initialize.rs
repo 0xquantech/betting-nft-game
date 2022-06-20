@@ -29,7 +29,16 @@ pub struct Initialize<'info> {
     )]
     pub escrow_ata: Account<'info, TokenAccount>,
 
+    #[account(
+        init,
+        associated_token::mint = rank_mint,
+        associated_token::authority = global_state,
+        payer = authority
+    )]
+    pub feel_vault_ata: Account<'info, TokenAccount>,
+
     pub token_mint: Account<'info, Mint>,
+    pub rank_mint: Account<'info, Mint>,
 
     /// CHECK: no need to check
     pub treasury: AccountInfo<'info>,
@@ -66,5 +75,6 @@ pub fn handler(ctx: Context<Initialize>, new_authority: Pubkey) -> Result<()> {
     accts.global_state.platform_fee_rate = INITIAL_PLATFORM_FEE_RATE;
     accts.global_state.referral_fee_rate = INITIAL_REF_FEE_RATE;
     accts.global_state.token_mint = accts.token_mint.key();
+    accts.global_state.rank_mint = accts.rank_mint.key();
     Ok(())
 }

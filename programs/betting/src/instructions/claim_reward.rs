@@ -169,6 +169,9 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
     .checked_mul(accts.global_state.referral_fee_rate as u128).unwrap()
     .checked_div(FEE_RATE_DENOMINATOR as u128).unwrap();
 
+    accts.ref_user_state.ref_reward = accts.ref_user_state.ref_reward.checked_add(ref_fee as u64)
+    .unwrap();
+
     let real_reward = user_reward.checked_sub(ref_fee).unwrap() as u64;
 
     let signer_seeds = &[

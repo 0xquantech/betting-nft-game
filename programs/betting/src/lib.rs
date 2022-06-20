@@ -31,8 +31,8 @@ pub mod betting {
         start_arena::handler(ctx, arena_id)
     }
 
-    pub fn user_bet(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, bet_side: u8, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
-        user_bet::handler(ctx, arena_id, bet_amount, bet_side, ref_key, hash_key)
+    pub fn user_bet(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, hour: u64, day: u64, week: u64, bet_side: u8, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
+        user_bet::handler(ctx, arena_id, bet_amount, hour, day, week, bet_side, ref_key, hash_key)
     }
 
     pub fn end_arena(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
@@ -49,6 +49,30 @@ pub mod betting {
 
     pub fn claim_referral_reward(ctx: Context<ClaimReferralReward>) -> Result<()> {
         claim_referral_reward::handler(ctx)
+    }
+
+    pub fn init_hour_state(ctx: Context<InitHourState>, user_key: Pubkey, hour: u64) -> Result<()> {
+        init_hour_state::handler(ctx, user_key, hour)
+    }
+
+    pub fn init_day_state(ctx: Context<InitDayState>, user_key: Pubkey, day: u64) -> Result<()> {
+        init_day_state::handler(ctx, user_key, day)
+    }
+
+    pub fn init_week_state(ctx: Context<InitWeekState>, user_key: Pubkey, week: u64) -> Result<()> {
+        init_week_state::handler(ctx, user_key, week)
+    }
+
+    pub fn end_hour(ctx: Context<EndHour>, hour: u64, tiers: [u64; 5], rewards: [u64; 5]) -> Result<()> {
+        end_hour::handler(ctx, hour, tiers, rewards)
+    }
+
+    pub fn end_day(ctx: Context<EndDay>, day: u64, tiers: [u64; 7], rewards: [u64; 7]) -> Result<()> {
+        end_day::handler(ctx, day, tiers, rewards)
+    }
+
+    pub fn end_week(ctx: Context<EndWeek>, week: u64, tiers: [u64; 9], rewards: [u64; 9]) -> Result<()> {
+        end_week::handler(ctx, week, tiers, rewards)
     }
 
 }
