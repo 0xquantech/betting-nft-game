@@ -1,6 +1,7 @@
 import {
   PublicKey,
   Keypair,
+  Transaction,
   TransactionInstruction,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
@@ -21,7 +22,7 @@ import * as keys from "./keys";
 import { User } from "./user";
 import { BettingAccounts } from "./accounts";
 import { assert } from "chai";
-import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct } from "./utils";
+import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks } from "./utils";
 
 const program = anchor.workspace.Betting as anchor.Program<Betting>;
 const connection = program.provider.connection;
@@ -130,12 +131,12 @@ export const userBet = async (
   ).digest('hex');
   let hash_arr = getHashArr(hash_str);
 
-  const instructions: TransactionInstruction[] = [];
+  const transaction = new Transaction();
   let userStateAcc = await program.account.userState.fetchNullable(
     user.userStateKey
   );
   if (userStateAcc === null) {
-    instructions.push(
+    transaction.add(
       await createUserStateInstruction(
         user,
         user.publicKey,
@@ -143,15 +144,62 @@ export const userBet = async (
       )
     );
   }
+  
+  let dateNow = Date.now();
+  let hour = getPassedHours(dateNow);
+  let day = getPassedDays(dateNow);
+  let week = getPassedWeeks(dateNow);
 
-  await sendOrSimulateTransaction(await program.methods
-    .userBet(new BN(arenaId), amountInDecimal, betSide ? 1 : 0, refKey, hash_arr)
+  let hourStateKey = await keys.getUserHourStateKey(user.publicKey, hour);
+  let dayStateKey = await keys.getUserDayStateKey(user.publicKey, day);
+  let weekStateKey = await keys.getUserWeekStateKey(user.publicKey, week);
+  if (!(await fetchHourState(hourStateKey))) {
+    transaction.add(program.methods
+      .initHourState(user.publicKey, hour)
+      .accounts({
+        payer: user.publicKey,
+        userHourState: hourStateKey,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      })
+      .instruction()
+    )
+  }
+  if (!(await fetchDayState(dayStateKey))) {
+    transaction.add(program.methods
+      .initDayState(user.publicKey, day)
+      .accounts({
+        payer: user.publicKey,
+        userDayState: dayStateKey,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      })
+      .instruction()
+    )
+  }
+  if (!(await fetchWeekState(weekStateKey))) {
+    transaction.add(program.methods
+      .initWeekState(user.publicKey, week)
+      .accounts({
+        payer: user.publicKey,
+        userWeekState: weekStateKey,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      })
+      .instruction()
+    )
+  }
+  transaction.add(await program.methods
+    .userBet(new BN(arenaId), amountInDecimal, hour, day, week, betSide ? 1 : 0, refKey, hash_arr)
     .accounts({
       user: user.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
       userState: user.userStateKey,
       userBetState: await keys.getUserBetStateKey(arenaId, user.publicKey),
+      userHourState: hourStateKey,
+      userDayState: dayStateKey,
+      userWeekState: weekStateKey,
       userAta: user.bettingMintAta,
       escrowAta: accts.escrowAta,
       tokenMint: accts.bettingMint,
@@ -159,10 +207,9 @@ export const userBet = async (
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
-    })
-    .signers([user.keypair])
-    .preInstructions(instructions)
-    .transaction(),
+    }));
+  await sendOrSimulateTransaction(
+    transaction,
     [user.keypair],
     connection
   );
@@ -278,3 +325,23 @@ export const fetchUserBetState = async (
 ): Promise<IdlAccounts<Betting>["userBetState"] | null> => {
   return await fetchData("userBetState", key);
 };
+
+export const fetchHourState = async (
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["hourState"] | null> => {
+  return await fetchData("hourState", key);
+};
+
+export const fetchDayState = async (
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["dayState"] | null> => {
+  return await fetchData("hourState", key);
+};
+
+export const fetchWeekState = async (
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["weekState"] | null> => {
+  return await fetchData("hourState", key);
+};
+
+

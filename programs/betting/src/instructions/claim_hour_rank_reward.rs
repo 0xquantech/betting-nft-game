@@ -57,15 +57,19 @@ pub struct ClaimHourRankReward<'info> {
 
 impl<'info> ClaimHourRankReward<'info> {
     fn validate(&self) -> Result<()> {
-        Ok(())
+      require!(self.user_hour_state.bet_amount >= self.hour_result.tiers[0],
+        BettingError::UnableToClaim);
+      require!(self.user_hour_state.is_claimed == 0,
+         BettingError::AlreadyClaimed);
+      Ok(())
     }
     fn claim_reward_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),
             Transfer {
-                from: self.user_vault_ata.to_account_info(),
-                to: self.user_ata.to_account_info(),
-                authority: self.user_state.to_account_info(),
+                from: self.feel_vault_ata.to_account_info(),
+                to: self.user_feel_ata.to_account_info(),
+                authority: self.global_state.to_account_info(),
             },
         )
     }
@@ -74,18 +78,30 @@ impl<'info> ClaimHourRankReward<'info> {
 #[access_control(ctx.accounts.validate())]
 pub fn handler(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
     let accts = ctx.accounts;
-    let user_key = accts.user.key();
+
+    let mut reward_amount = 0;
+    let tiers = accts.hour_result.tiers;
+
+    for i in 0..=tiers.len() {
+      if accts.user_hour_state.bet_amount < tiers[i] {
+        reward_amount = accts.hour_result.reward_per_tier[i-1];
+        break;
+      }
+    }
+    if reward_amount == 0 {
+      reward_amount = accts.hour_result.reward_per_tier[tiers.len() - 1];
+    }
+
     let signer_seeds = &[
-        USER_STATE_SEED,
-        user_key.as_ref(),
-        &[*(ctx.bumps.get("user_state").unwrap())],
+      GLOBAL_STATE_SEED,
+        &[*(ctx.bumps.get("global_state").unwrap())],
     ];
     // to freelancer
     token::transfer(
-        accts.claim_referral_context().with_signer(&[signer_seeds]),
-        accts.user_vault_ata.amount,
+        accts.claim_reward_context().with_signer(&[signer_seeds]),
+        reward_amount,
     )?;
 
-    accts.user_state.ref_reward = 0;
+    accts.user_hour_state.is_claimed = 1;
     Ok(())
 }

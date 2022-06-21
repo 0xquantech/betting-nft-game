@@ -132,3 +132,19 @@ export const getHashArr = (hashStr: string) => {
   }
   return arrHash;
 }
+
+const ONE_HOUR_MS = 1000 * 60 * 60;
+const ONE_DAY_MS = ONE_HOUR_MS * 24;
+const ONE_WEEK_MS = ONE_DAY_MS * 7;
+
+export const getPassedHours = (val: number) => {
+  return Math.floor(val / ONE_HOUR_MS);
+}
+
+export const getPassedDays = (val: number) => {
+  return Math.floor(val / ONE_DAY_MS);
+}
+
+export const getPassedWeeks = (val: number) => {
+  return Math.floor(val / ONE_WEEK_MS);
+}

@@ -41,6 +41,9 @@ pub enum BettingError {
     #[msg("Incorrect Week")]
     IncorrectWeek,
 
+    #[msg("Unable to claim because you are not winner")]
+    UnableToClaim,
+
     #[msg("Reduce amount exceeds deposit amount")]
     ReduceAmountExceed,
 

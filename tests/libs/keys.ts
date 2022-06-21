@@ -4,7 +4,13 @@ import {
   GLOBAL_STATE_SEED,
   USER_STATE_SEED,
   ARENA_STATE_SEED,
-  USER_BET_SEED
+  USER_BET_SEED,
+  HOUR_STATE_SEED,
+  DAY_STATE_SEED,
+  WEEK_STATE_SEED,
+  HOUR_RESULT_SEED,
+  DAY_RESULT_SEED,
+  WEEK_RESULT_SEED
 } from "./constants";
 import { asyncGetPda } from "./utils";
 import { getProgram } from "../program";
@@ -43,4 +49,52 @@ export const getUserBetStateKey = async (arenaId: number, userKey: PublicKey) =>
     program.programId
   );
   return userBetStateKey;
+};
+
+export const getUserHourStateKey = async (userKey: PublicKey, hour: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(HOUR_STATE_SEED), userKey.toBuffer(), new BN(hour).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+export const getUserDayStateKey = async (userKey: PublicKey, day: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(DAY_STATE_SEED), userKey.toBuffer(), new BN(day).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+export const getUserWeekStateKey = async (userKey: PublicKey, week: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(WEEK_STATE_SEED), userKey.toBuffer(), new BN(week).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+export const getHourResultKey = async (hour: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(HOUR_RESULT_SEED), new BN(hour).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+export const getDayResultKey = async (day: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(DAY_RESULT_SEED), new BN(day).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+export const getWeekResultKey = async (week: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(WEEK_RESULT_SEED), new BN(week).toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
 };

@@ -39,3 +39,12 @@ pub use end_day::*;
 
 pub mod end_week;
 pub use end_week::*;
+
+pub mod claim_hour_rank_reward;
+pub use claim_hour_rank_reward::*;
+
+pub mod claim_day_rank_reward;
+pub use claim_day_rank_reward::*;
+
+pub mod claim_week_rank_reward;
+pub use claim_week_rank_reward::*;
