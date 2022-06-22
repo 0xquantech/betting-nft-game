@@ -7,9 +7,9 @@ pub const HOUR_STATE_SEED: &[u8] = b"HOUR_STATE_SEED";
 pub const DAY_STATE_SEED: &[u8] = b"DAY_STATE_SEED";
 pub const WEEK_STATE_SEED: &[u8] = b"WEEK_STATE_SEED";
 
-pub const HOUR_RESULT_SEED: &[u8] = b"HOUR_STATE_SEED";
-pub const DAY_RESULT_SEED: &[u8] = b"DAY_STATE_SEED";
-pub const WEEK_RESULT_SEED: &[u8] = b"WEEK_STATE_SEED";
+pub const HOUR_RESULT_SEED: &[u8] = b"HOUR_RESULT_SEED";
+pub const DAY_RESULT_SEED: &[u8] = b"DAY_RESULT_SEED";
+pub const WEEK_RESULT_SEED: &[u8] = b"WEEK_RESULT_SEED";
 
 pub const FEE_RATE_DENOMINATOR: u64 = 10000;
 pub const INITIAL_PLATFORM_FEE_RATE: u64 = 1000; // 10%

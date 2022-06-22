@@ -35,7 +35,7 @@ pub struct ClaimWeekRankReward<'info> {
 
     #[account(
       mut,
-      seeds = [WEEK_STATE_SEED, &week.to_le_bytes()],
+      seeds = [WEEK_RESULT_SEED, &week.to_le_bytes()],
       bump
     )]
     pub week_result: Box<Account<'info, WeekResult>>,
@@ -57,7 +57,8 @@ pub struct ClaimWeekRankReward<'info> {
 
 impl<'info> ClaimWeekRankReward<'info> {
     fn validate(&self) -> Result<()> {
-      require!(self.user_week_state.bet_amount >= self.week_result.tiers[0],
+      let last = self.week_result.tiers.len() - 1;
+      require!(self.user_week_state.bet_amount >= self.week_result.tiers[last],
         BettingError::UnableToClaim);
       require!(self.user_week_state.is_claimed == 0,
          BettingError::AlreadyClaimed);
@@ -81,15 +82,12 @@ pub fn handler(ctx: Context<ClaimWeekRankReward>, week: u64) -> Result<()> {
 
     let mut reward_amount = 0;
     let tiers = accts.week_result.tiers;
-
-    for i in 0..=tiers.len() {
-      if accts.user_week_state.bet_amount < tiers[i] {
-        reward_amount = accts.week_result.reward_per_tier[i-1];
+    let last = tiers.len() - 1;
+    for i in last..=0 {
+      if accts.user_week_state.bet_amount >= tiers[i] {
+        reward_amount = accts.week_result.reward_per_tier[i];
         break;
       }
-    }
-    if reward_amount == 0 {
-      reward_amount = accts.week_result.reward_per_tier[tiers.len() - 1];
     }
 
     let signer_seeds = &[

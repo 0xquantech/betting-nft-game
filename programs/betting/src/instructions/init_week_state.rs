@@ -11,7 +11,7 @@ pub struct InitWeekState<'info> {
 
     #[account(
         init,
-        seeds = [DAY_STATE_SEED, user_key.as_ref(), &week.to_le_bytes()],
+        seeds = [WEEK_STATE_SEED, user_key.as_ref(), &week.to_le_bytes()],
         bump,
         payer = payer,
         space = 8 + size_of::<WeekState>()
@@ -31,6 +31,6 @@ impl<'info> InitWeekState<'info> {
 pub fn handler(ctx: Context<InitWeekState>, user_key: Pubkey, week: u64) -> Result<()> {
     let accts = ctx.accounts;
     accts.user_week_state.user = user_key;
-    accts.user_week_state.start_time = week;
+    accts.user_week_state.start_time = week.checked_mul(ONE_WEEK).unwrap();
     Ok(())
 }

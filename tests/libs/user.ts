@@ -36,7 +36,7 @@ export class User {
     await airdropSol(
       connection,
       this.keypair.publicKey,
-      99999 * LAMPORTS_PER_SOL
+      9 * LAMPORTS_PER_SOL
     );
     this.bettingMintAta = await createAssociatedTokenAccount(
       connection,

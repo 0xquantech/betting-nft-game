@@ -11,8 +11,10 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
+import { mintTo } from "@solana/spl-token";
 
 chaiUse(chaiAsPromised);
 
@@ -29,6 +31,7 @@ describe("betting", () => {
   const userB = new User();
   const userC = new User();
   const userD = new User();
+  const remainingUsers: Array<User> = [];
 
   const arenaId = 1;
   it("setup", async () => {
@@ -38,20 +41,31 @@ describe("betting", () => {
     await userB.init(provider.connection, bettingAccounts);
     await userC.init(provider.connection, bettingAccounts);
     await userD.init(provider.connection, bettingAccounts);
+
+    for (let i = 0; i < 10; i ++) {
+      let user = new User();
+      await user.init(provider.connection, bettingAccounts);
+      remainingUsers.push(user);
+    }
   });
 
   it("Is initialized!", async () => {
     // Add your test here.
     const tx = await initializeProgram(bettingAccounts, admin);
+
+    await mintTo(
+      provider.connection,
+      admin.keypair,
+      bettingAccounts.rankMint,
+      bettingAccounts.feelVaultAta,
+      bettingAccounts.payerAndAuth,
+      100_000_000_000_000
+    );
   });
 
   it("Open Arena", async () => {
     const tx = await openArena(bettingAccounts, admin, arenaId);
   })
-
-  it("Start Arena", async () => {
-    const tx = await startArena(bettingAccounts, admin, arenaId);
-  });
 
   it("UserA Bet to Up, 1000 USDC", async () => {
     const tx = await userBet(bettingAccounts, userA, userD.publicKey, arenaId, 1000, true /** up */);
@@ -69,6 +83,22 @@ describe("betting", () => {
     const tx = await userBet(bettingAccounts, userC, userD.publicKey, arenaId, 1500, false /** down */);
   });
 
+  it("Remaining users Bet to random with random amount", async () => {
+    for (let i = 0; i < remainingUsers.length; i ++) {
+      await userBet(bettingAccounts,
+        remainingUsers[i],
+        userD.publicKey,
+        arenaId,
+        Math.random() * 2000,
+        Math.random() > 0.5 ? true : false
+      );
+    }
+  });
+
+  it("Start Arena", async () => {
+    const tx = await startArena(bettingAccounts, admin, arenaId);
+  });
+
   it("End Arena", async () => {
     const tx = await endArena(bettingAccounts, admin, arenaId);
   });
@@ -84,4 +114,28 @@ describe("betting", () => {
   it("UserC claim Reward", async () => {
     const tx = await claimReward(bettingAccounts, userC, userD, arenaId);
   })
+  
+  it("End Hour", async () => {
+    await endHour(bettingAccounts, admin);
+  });
+
+  it("End Day", async () => {
+    await endDay(bettingAccounts, admin);
+  });
+
+  it("End Week", async () => {
+    await endWeek(bettingAccounts, admin);
+  });
+
+  it("Claim hour rank reward", async () => {
+    await claimHourRankReward(bettingAccounts, userA);
+  });
+
+  it("Claim day rank reward", async () => {
+    await claimDayRankReward(bettingAccounts, userA);
+  });
+
+  it("Claim week rank reward", async () => {
+    await claimWeekRankReward(bettingAccounts, userA);
+  });
 });

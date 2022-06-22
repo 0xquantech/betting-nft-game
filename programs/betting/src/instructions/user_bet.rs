@@ -97,15 +97,15 @@ impl<'info> UserBet<'info> {
         assert_ref_hash(self.user.key(), ref_key, hash_key)?;
 
         // validate hour, day, week states
-        require!(self.user_hour_state.start_time < current_time 
+        require!(self.user_hour_state.start_time <= current_time 
           && self.user_hour_state.start_time + ONE_HOUR >= current_time, 
           BettingError::IncorrectHour);
         
-        require!(self.user_day_state.start_time < current_time 
+        require!(self.user_day_state.start_time <= current_time 
           && self.user_day_state.start_time + ONE_DAY >= current_time, 
           BettingError::IncorrectDay);
 
-        require!(self.user_week_state.start_time < current_time 
+        require!(self.user_week_state.start_time <= current_time 
           && self.user_week_state.start_time + ONE_WEEK >= current_time, 
           BettingError::IncorrectWeek);
 

@@ -31,6 +31,6 @@ impl<'info> InitDayState<'info> {
 pub fn handler(ctx: Context<InitDayState>, user_key: Pubkey, day: u64) -> Result<()> {
     let accts = ctx.accounts;
     accts.user_day_state.user = user_key;
-    accts.user_day_state.start_time = day;
+    accts.user_day_state.start_time = day.checked_mul(ONE_DAY).unwrap();
     Ok(())
 }

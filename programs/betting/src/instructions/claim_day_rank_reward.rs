@@ -57,7 +57,8 @@ pub struct ClaimDayRankReward<'info> {
 
 impl<'info> ClaimDayRankReward<'info> {
     fn validate(&self) -> Result<()> {
-      require!(self.user_day_state.bet_amount >= self.day_result.tiers[0],
+      let last = self.day_result.tiers.len() - 1;
+      require!(self.user_day_state.bet_amount >= self.day_result.tiers[last],
         BettingError::UnableToClaim);
       require!(self.user_day_state.is_claimed == 0,
          BettingError::AlreadyClaimed);
@@ -81,15 +82,12 @@ pub fn handler(ctx: Context<ClaimDayRankReward>, day: u64) -> Result<()> {
 
     let mut reward_amount = 0;
     let tiers = accts.day_result.tiers;
-
-    for i in 0..=tiers.len() {
-      if accts.user_day_state.bet_amount < tiers[i] {
-        reward_amount = accts.day_result.reward_per_tier[i-1];
+    let last = tiers.len() - 1;
+    for i in last..=0 {
+      if accts.user_day_state.bet_amount >= tiers[i] {
+        reward_amount = accts.day_result.reward_per_tier[i];
         break;
       }
-    }
-    if reward_amount == 0 {
-      reward_amount = accts.day_result.reward_per_tier[tiers.len() - 1];
     }
 
     let signer_seeds = &[

@@ -20,8 +20,10 @@ import * as keys from "./keys";
 
 export class BettingAccounts {
   bettingMint: PublicKey;
+  rankMint: PublicKey;
   payerAndAuth: Keypair;
   escrowAta: PublicKey;
+  feelVaultAta: PublicKey;
   globalStateKey: PublicKey;
   pythAccount: PublicKey;
   constructor() {
@@ -41,10 +43,21 @@ export class BettingAccounts {
       this.payerAndAuth.publicKey,
       null,
       USDC_DECIMALS
+    );    
+    this.rankMint = await createMint(
+      connection,
+      this.payerAndAuth,
+      this.payerAndAuth.publicKey,
+      null,
+      USDC_DECIMALS
     );
     this.escrowAta = getAssocTokenAcct(
       this.globalStateKey,
       this.bettingMint
+    )[0];
+    this.feelVaultAta= getAssocTokenAcct(
+      this.globalStateKey,
+      this.rankMint
     )[0];
   }
 }

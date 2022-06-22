@@ -57,7 +57,9 @@ pub struct ClaimHourRankReward<'info> {
 
 impl<'info> ClaimHourRankReward<'info> {
     fn validate(&self) -> Result<()> {
-      require!(self.user_hour_state.bet_amount >= self.hour_result.tiers[0],
+      
+    let last = self.hour_result.tiers.len() - 1;
+      require!(self.user_hour_state.bet_amount >= self.hour_result.tiers[last],
         BettingError::UnableToClaim);
       require!(self.user_hour_state.is_claimed == 0,
          BettingError::AlreadyClaimed);
@@ -81,17 +83,13 @@ pub fn handler(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
 
     let mut reward_amount = 0;
     let tiers = accts.hour_result.tiers;
-
-    for i in 0..=tiers.len() {
-      if accts.user_hour_state.bet_amount < tiers[i] {
-        reward_amount = accts.hour_result.reward_per_tier[i-1];
+    let last = tiers.len() - 1;
+    for i in last..=0 {
+      if accts.user_hour_state.bet_amount >= tiers[i] {
+        reward_amount = accts.hour_result.reward_per_tier[i];
         break;
       }
     }
-    if reward_amount == 0 {
-      reward_amount = accts.hour_result.reward_per_tier[tiers.len() - 1];
-    }
-
     let signer_seeds = &[
       GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],

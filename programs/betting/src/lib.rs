@@ -75,4 +75,15 @@ pub mod betting {
         end_week::handler(ctx, week, tiers, rewards)
     }
 
+    pub fn claim_hour_rank_reward(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
+        claim_hour_rank_reward::handler(ctx, hour)
+    }
+
+    pub fn claim_day_rank_reward(ctx: Context<ClaimDayRankReward>, day: u64) -> Result<()> {
+        claim_day_rank_reward::handler(ctx, day)
+    }
+
+    pub fn claim_week_rank_reward(ctx: Context<ClaimWeekRankReward>, week: u64) -> Result<()> {
+        claim_week_rank_reward::handler(ctx, week)
+    }
 }
