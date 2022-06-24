@@ -2,6 +2,7 @@ import * as anchor from "@project-serum/anchor";
 import NodeWallet from "@project-serum/anchor/dist/cjs/nodewallet";
 import {
   PublicKey,
+  Keypair,
   Connection, 
   clusterApiUrl,
   SystemProgram,
@@ -28,8 +29,14 @@ const init = async () => {
   
   const globalStateKey = await keys.getGlobalStateKey();
   const mint = new PublicKey(Constants.USDC_MINT);
-  const escrowAta = await getAssociatedTokenAddress(mint, globalStateKey, true);
+  const feelMint = new PublicKey(Constants.FEEL_MINT);
 
+  const escrowAta = await getAssociatedTokenAddress(mint, globalStateKey, true);
+  const feelVaultAta = await getAssociatedTokenAddress(
+    feelMint,
+    globalStateKey,
+    true
+  );
   console.log("admin.publicKey =", admin.publicKey.toBase58());
   console.log("escrowAta =", escrowAta.toBase58());
   console.log("Constants.SOL_PYTH_ACCOUNT =", Constants.SOL_PYTH_ACCOUNT);
@@ -42,7 +49,9 @@ const init = async () => {
       authority: admin.publicKey,
       globalState: globalStateKey,
       escrowAta,
+      feelVaultAta,
       tokenMint: mint,
+      rankMint: feelMint,
       treasury: new PublicKey(Constants.TREASURY),
       pythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT),
       tokenProgram: TOKEN_PROGRAM_ID,

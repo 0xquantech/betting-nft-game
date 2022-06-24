@@ -36,3 +36,24 @@ export const fetchUserState = async (
   return await fetchData(program, "userState", key);
 };
 
+
+export const fetchHourState = async (
+  program: any,
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["hourState"] | null> => {
+  return await fetchData(program, "hourState", key);
+};
+
+export const fetchDayState = async (
+  program: any,
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["dayState"] | null> => {
+  return await fetchData(program, "hourState", key);
+};
+
+export const fetchWeekState = async (
+  program: any,
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["weekState"] | null> => {
+  return await fetchData(program, "hourState", key);
+};

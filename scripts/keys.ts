@@ -5,6 +5,12 @@ import {
   USER_STATE_SEED,
   ARENA_STATE_SEED,
   USER_BET_SEED,
+  HOUR_STATE_SEED,
+  DAY_STATE_SEED,
+  WEEK_STATE_SEED,
+  HOUR_RESULT_SEED,
+  DAY_RESULT_SEED,
+  WEEK_RESULT_SEED,
   PROGRAM_ID
 } from "./constants";
 
@@ -41,4 +47,53 @@ export const getUserBetStateKey = async (arenaId: number, userKey: PublicKey) =>
     new PublicKey(PROGRAM_ID)
   );
   return userBetStateKey;
+};
+
+
+export const getUserHourStateKey = async (userKey: PublicKey, hour: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(HOUR_STATE_SEED), userKey.toBuffer(), hour.toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
+};
+
+export const getUserDayStateKey = async (userKey: PublicKey, day: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(DAY_STATE_SEED), userKey.toBuffer(), day.toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
+};
+
+export const getUserWeekStateKey = async (userKey: PublicKey, week: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(WEEK_STATE_SEED), userKey.toBuffer(), week.toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
+};
+
+export const getHourResultKey = async (hour: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(HOUR_RESULT_SEED), hour.toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
+};
+
+export const getDayResultKey = async (day: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(DAY_RESULT_SEED), new BN(day).toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
+};
+
+export const getWeekResultKey = async (week: BN) => {
+  const [key] = await PublicKey.findProgramAddress(
+    [Buffer.from(WEEK_RESULT_SEED), new BN(week).toArrayLike(Buffer, "le", 8)],
+    new PublicKey(PROGRAM_ID)
+  );
+  return key;
 };

@@ -9,20 +9,20 @@ url = "https://api.metaplex.solana.com"
 address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
 
 [programs.localnet]
-betting = "FnMqEZDnG3wAEbhMNN6UsnXCXt9vMzQHFDZ8BB2pqmMm"
+betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
 
 [programs.devnet]
-betting = "FnMqEZDnG3wAEbhMNN6UsnXCXt9vMzQHFDZ8BB2pqmMm"
+betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
 
 [programs.mainnet]
-betting = "FnMqEZDnG3wAEbhMNN6UsnXCXt9vMzQHFDZ8BB2pqmMm"
+betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
-wallet = "/root/.config/solana/id.json"
+cluster = "devnet"
+wallet = "./test-key.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
