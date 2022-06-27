@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 import { mintTo } from "@solana/spl-token";
@@ -138,4 +138,8 @@ describe("betting", () => {
   it("Claim week rank reward", async () => {
     await claimWeekRankReward(bettingAccounts, userA);
   });
+
+  it("Claim Ref reward", async () => {
+    await claimRefReward(bettingAccounts, userD);
+  })
 });

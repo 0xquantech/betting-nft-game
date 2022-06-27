@@ -315,6 +315,41 @@ export const claimReward = async (
   console.log("userAmount +", postUserAmount - prevUserAmount);
 };
 
+
+export const claimRefReward = async (
+  accts: BettingAccounts, 
+  user: User
+) => {
+  const userVaultAta = getAssocTokenAcct(
+    user.userStateKey,
+    accts.bettingMint,
+  )[0];
+
+  const instructions: TransactionInstruction[] = [];
+
+  await sendOrSimulateTransaction(await program.methods
+    .claimReferralReward()
+    .accounts({
+      user: user.publicKey,
+      userAta: user.bettingMintAta,
+      userState: user.userStateKey,
+      userVaultAta,
+      tokenMint: accts.bettingMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair])
+    .preInstructions(instructions)
+    .transaction(),
+    [user.keypair],
+    connection,
+    true
+  );
+};
+
+
 export const endHour = async (accts: BettingAccounts, admin: User) => {
   let hour = getPassedHours(Date.now());
   let hour_sec = hour.mul(new BN(Constants.ONE_HOUR_SEC));
