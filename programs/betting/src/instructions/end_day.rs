@@ -48,6 +48,6 @@ pub fn handler(ctx: Context<EndDay>, day: u64, tiers: [u64; 7], rewards: [u64; 7
     ctx.accounts.day_result.tiers = tiers;
     ctx.accounts.day_result.reward_per_tier = rewards;
     ctx.accounts.day_result.day = day;
-    
+
     Ok(())
 }

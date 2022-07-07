@@ -23,6 +23,7 @@ pub const ONE_WEEK: u64 = ONE_DAY * 7;
 pub enum ArenaStatus {
     Opened,
     Started,
+    EndRatioBelow,
     EndSuccess,
-    EndFail
+    Cancelled,
 }

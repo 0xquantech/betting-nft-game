@@ -31,8 +31,24 @@ pub mod betting {
         start_arena::handler(ctx, arena_id)
     }
 
-    pub fn user_bet(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, hour: u64, day: u64, week: u64, bet_side: u8, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
-        user_bet::handler(ctx, arena_id, bet_amount, hour, day, week, bet_side, ref_key, hash_key)
+    pub fn cancel_arena(ctx: Context<CancelArena>, arena_id: u64) -> Result<()> {
+        cancel_arena::handler(ctx, arena_id)
+    }
+
+    pub fn user_bet(
+        ctx: Context<UserBet>,
+        arena_id: u64,
+        bet_amount: u64,
+        hour: u64,
+        day: u64,
+        week: u64,
+        bet_side: u8,
+        ref_key: Pubkey,
+        hash_key: [u8; 32],
+    ) -> Result<()> {
+        user_bet::handler(
+            ctx, arena_id, bet_amount, hour, day, week, bet_side, ref_key, hash_key,
+        )
     }
 
     pub fn end_arena(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
@@ -41,6 +57,10 @@ pub mod betting {
 
     pub fn claim_reward(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
         claim_reward::handler(ctx, arena_id)
+    }
+
+    pub fn return_bet(ctx: Context<ReturnBet>, arena_id: u64) -> Result<()> {
+        return_bet::handler(ctx, arena_id)
     }
 
     pub fn init_user_state(ctx: Context<InitUserState>, user_key: Pubkey) -> Result<()> {
@@ -63,15 +83,30 @@ pub mod betting {
         init_week_state::handler(ctx, user_key, week)
     }
 
-    pub fn end_hour(ctx: Context<EndHour>, hour: u64, tiers: [u64; 5], rewards: [u64; 5]) -> Result<()> {
+    pub fn end_hour(
+        ctx: Context<EndHour>,
+        hour: u64,
+        tiers: [u64; 5],
+        rewards: [u64; 5],
+    ) -> Result<()> {
         end_hour::handler(ctx, hour, tiers, rewards)
     }
 
-    pub fn end_day(ctx: Context<EndDay>, day: u64, tiers: [u64; 7], rewards: [u64; 7]) -> Result<()> {
+    pub fn end_day(
+        ctx: Context<EndDay>,
+        day: u64,
+        tiers: [u64; 7],
+        rewards: [u64; 7],
+    ) -> Result<()> {
         end_day::handler(ctx, day, tiers, rewards)
     }
 
-    pub fn end_week(ctx: Context<EndWeek>, week: u64, tiers: [u64; 9], rewards: [u64; 9]) -> Result<()> {
+    pub fn end_week(
+        ctx: Context<EndWeek>,
+        week: u64,
+        tiers: [u64; 9],
+        rewards: [u64; 9],
+    ) -> Result<()> {
         end_week::handler(ctx, week, tiers, rewards)
     }
 

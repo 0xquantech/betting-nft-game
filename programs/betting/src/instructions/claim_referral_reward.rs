@@ -12,12 +12,19 @@ pub struct ClaimReferralReward<'info> {
     pub user: Signer<'info>,
 
     #[account(
+        seeds = [GLOBAL_STATE_SEED],
+        bump,
+        has_one = token_mint
+    )]
+    pub global_state: Box<Account<'info, GlobalState>>,
+
+    #[account(
       mut,
       associated_token::mint = token_mint,
       associated_token::authority = user,
     )]
     pub user_ata: Box<Account<'info, TokenAccount>>,
-    
+
     #[account(
       mut,
       seeds = [USER_STATE_SEED, user.key().as_ref()],
@@ -37,7 +44,7 @@ pub struct ClaimReferralReward<'info> {
     pub token_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    
+
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }

@@ -37,7 +37,10 @@ pub struct StartArena<'info> {
 
 impl<'info> StartArena<'info> {
     fn validate(&self) -> Result<()> {
-      require!(self.arena_state.status == ArenaStatus::Opened as u8, BettingError::FinishedArena);
+        require!(
+            self.arena_state.status == ArenaStatus::Opened as u8,
+            BettingError::FinishedArena
+        );
         Ok(())
     }
 }
@@ -55,7 +58,7 @@ pub fn handler(ctx: Context<StartArena>, arena_id: u64) -> Result<()> {
     accts.arena_state.start_timestamp = current_time;
     accts.arena_state.duration = accts.global_state.arena_duration;
     accts.arena_state.status = ArenaStatus::Started as u8;
-    
+
     msg!("locked price = {:?}", accts.arena_state.locked_price);
 
     Ok(())

@@ -23,7 +23,7 @@ pub struct InitUserState<'info> {
 
 impl<'info> InitUserState<'info> {
     pub fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 

@@ -37,7 +37,7 @@ pub struct EndHour<'info> {
 
 impl<'info> EndHour<'info> {
     fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 

@@ -17,6 +17,7 @@ pub struct UserBet<'info> {
     #[account(
       seeds = [GLOBAL_STATE_SEED],
       bump,
+      has_one = token_mint
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
@@ -89,25 +90,37 @@ impl<'info> UserBet<'info> {
     fn validate(&self, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
         let current_time = Clock::get()?.unix_timestamp as u64;
         // require!(current_time > )
-        
-        require!(self.arena_state.status == ArenaStatus::Opened as u8, BettingError::ArenaNotOpened);
-        if (self.user_state.is_ref_inited == 1) {
-          require!(self.user_state.referrer.eq(&ref_key), BettingError::ReferrerMisMatch);
+
+        require!(
+            self.arena_state.status == ArenaStatus::Opened as u8,
+            BettingError::ArenaNotOpened
+        );
+        if self.user_state.is_ref_inited == 1 {
+            require!(
+                self.user_state.referrer.eq(&ref_key),
+                BettingError::ReferrerMisMatch
+            );
         }
         assert_ref_hash(self.user.key(), ref_key, hash_key)?;
 
         // validate hour, day, week states
-        require!(self.user_hour_state.start_time <= current_time 
-          && self.user_hour_state.start_time + ONE_HOUR >= current_time, 
-          BettingError::IncorrectHour);
-        
-        require!(self.user_day_state.start_time <= current_time 
-          && self.user_day_state.start_time + ONE_DAY >= current_time, 
-          BettingError::IncorrectDay);
+        require!(
+            self.user_hour_state.start_time <= current_time
+                && self.user_hour_state.start_time + ONE_HOUR >= current_time,
+            BettingError::IncorrectHour
+        );
 
-        require!(self.user_week_state.start_time <= current_time 
-          && self.user_week_state.start_time + ONE_WEEK >= current_time, 
-          BettingError::IncorrectWeek);
+        require!(
+            self.user_day_state.start_time <= current_time
+                && self.user_day_state.start_time + ONE_DAY >= current_time,
+            BettingError::IncorrectDay
+        );
+
+        require!(
+            self.user_week_state.start_time <= current_time
+                && self.user_week_state.start_time + ONE_WEEK >= current_time,
+            BettingError::IncorrectWeek
+        );
 
         Ok(())
     }
@@ -124,14 +137,24 @@ impl<'info> UserBet<'info> {
 }
 
 #[access_control(ctx.accounts.validate(ref_key, hash_key))]
-pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, hour: u64, day: u64, week: u64, is_up: u8, ref_key: Pubkey, hash_key: [u8; 32]) -> Result<()> {
+pub fn handler(
+    ctx: Context<UserBet>,
+    arena_id: u64,
+    bet_amount: u64,
+    hour: u64,
+    day: u64,
+    week: u64,
+    is_up: u8,
+    ref_key: Pubkey,
+    hash_key: [u8; 32],
+) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
     accts.user_bet_state.user = accts.user.key();
     accts.user_bet_state.bet_timestamp = current_time;
     accts.user_bet_state.arena_id = arena_id;
     accts.user_bet_state.bet_amount = bet_amount;
-      
+
     if is_up == 0 {
         accts.user_bet_state.is_up = 0;
         accts.arena_state.down_count += 1;
@@ -146,14 +169,26 @@ pub fn handler(ctx: Context<UserBet>, arena_id: u64, bet_amount: u64, hour: u64,
         accts.arena_state.up_amount = accts.arena_state.up_amount.checked_add(bet_amount).unwrap();
     };
     if accts.user_state.is_ref_inited == 0 {
-      accts.user_state.is_ref_inited = 1;
-      accts.user_state.referrer = ref_key;
+        accts.user_state.is_ref_inited = 1;
+        accts.user_state.referrer = ref_key;
     }
 
     token::transfer(accts.bet_context(), bet_amount)?;
 
-    accts.user_hour_state.bet_amount = accts.user_hour_state.bet_amount.checked_add(bet_amount).unwrap();
-    accts.user_day_state.bet_amount = accts.user_day_state.bet_amount.checked_add(bet_amount).unwrap();
-    accts.user_week_state.bet_amount = accts.user_week_state.bet_amount.checked_add(bet_amount).unwrap();
+    accts.user_hour_state.bet_amount = accts
+        .user_hour_state
+        .bet_amount
+        .checked_add(bet_amount)
+        .unwrap();
+    accts.user_day_state.bet_amount = accts
+        .user_day_state
+        .bet_amount
+        .checked_add(bet_amount)
+        .unwrap();
+    accts.user_week_state.bet_amount = accts
+        .user_week_state
+        .bet_amount
+        .checked_add(bet_amount)
+        .unwrap();
     Ok(())
 }

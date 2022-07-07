@@ -72,8 +72,7 @@ export const openArena = async (accts: BettingAccounts, admin: User, arenaId: nu
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -91,8 +90,23 @@ export const startArena = async (accts: BettingAccounts, admin: User, arenaId: n
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
+  );
+};
+
+export const cancelArena = async (accts: BettingAccounts, admin: User, arenaId: number) => {
+  await sendOrSimulateTransaction(await program.methods
+    .cancelArena(new BN(arenaId))
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      arenaState: await keys.getArenaStateKey(arenaId),
+      pythAccount: accts.pythAccount
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
   );
 };
 
@@ -118,8 +132,7 @@ export const endArena = async (accts: BettingAccounts, admin: User, arenaId: num
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -154,7 +167,7 @@ export const userBet = async (
       )
     );
   }
-  
+
   let dateNow = Date.now();
   let hour = getPassedHours(dateNow);
   let day = getPassedDays(dateNow);
@@ -175,6 +188,7 @@ export const userBet = async (
       .instruction()
     )
   }
+  
   if (!(await fetchDayState(dayStateKey))) {
     transaction.add(await program.methods
       .initDayState(user.publicKey, day)
@@ -298,8 +312,7 @@ export const claimReward = async (
     .preInstructions(instructions)
     .transaction(),
     [user.keypair],
-    connection,
-    true
+    connection
   );
 
   const postEscrowAmount = (await program.provider.connection.getTokenAccountBalance(
@@ -331,6 +344,7 @@ export const claimRefReward = async (
     .claimReferralReward()
     .accounts({
       user: user.publicKey,
+      globalState: await keys.getGlobalStateKey(),
       userAta: user.bettingMintAta,
       userState: user.userStateKey,
       userVaultAta,
@@ -344,8 +358,39 @@ export const claimRefReward = async (
     .preInstructions(instructions)
     .transaction(),
     [user.keypair],
-    connection,
-    true
+    connection
+  );
+};
+
+export const returnBet = async (
+  accts: BettingAccounts, 
+  user: User,
+  arenaId: number,
+) => {
+  const userVaultAta = getAssocTokenAcct(
+    user.userStateKey,
+    accts.bettingMint,
+  )[0];
+
+  const instructions: TransactionInstruction[] = [];
+
+  await sendOrSimulateTransaction(await program.methods
+    .returnBet(new BN(arenaId))
+    .accounts({
+      user: user.publicKey,
+      globalState: accts.globalStateKey,
+      arenaState: await keys.getArenaStateKey(arenaId),
+      userBetState: await keys.getUserBetStateKey(arenaId, user.publicKey),
+      userAta: user.bettingMintAta,
+      escrowAta: accts.escrowAta,
+      tokenMint: accts.bettingMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .signers([user.keypair])
+    .preInstructions(instructions)
+    .transaction(),
+    [user.keypair],
+    connection
   );
 };
 
@@ -398,8 +443,7 @@ export const endHour = async (accts: BettingAccounts, admin: User) => {
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -451,8 +495,7 @@ export const endDay = async (accts: BettingAccounts, admin: User) => {
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -509,8 +552,7 @@ export const endWeek = async (accts: BettingAccounts, admin: User) => {
     .signers([admin.keypair])
     .transaction(),
     [admin.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -553,8 +595,7 @@ export const claimHourRankReward = async (
     .signers([user.keypair])
     .transaction(),
     [user.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -597,8 +638,7 @@ export const claimDayRankReward = async (
     .signers([user.keypair])
     .transaction(),
     [user.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -641,8 +681,7 @@ export const claimWeekRankReward = async (
     .signers([user.keypair])
     .transaction(),
     [user.keypair],
-    connection,
-    true
+    connection
   );
 };
 
@@ -677,13 +716,13 @@ export const fetchHourState = async (
 export const fetchDayState = async (
   key: PublicKey
 ): Promise<IdlAccounts<Betting>["dayState"] | null> => {
-  return await fetchData("hourState", key);
+  return await fetchData("dayState", key);
 };
 
 export const fetchWeekState = async (
   key: PublicKey
 ): Promise<IdlAccounts<Betting>["weekState"] | null> => {
-  return await fetchData("hourState", key);
+  return await fetchData("weekState", key);
 };
 
 

@@ -17,6 +17,7 @@ pub struct ClaimReward<'info> {
     #[account(
       seeds = [GLOBAL_STATE_SEED],
       bump,
+      has_one = token_mint
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
@@ -83,8 +84,8 @@ impl<'info> ClaimReward<'info> {
         // require!(current_time > )
 
         require!(
-            self.arena_state.status == ArenaStatus::EndSuccess as u8 
-            || self.arena_state.status == ArenaStatus::EndFail as u8,
+            self.arena_state.status == ArenaStatus::EndSuccess as u8 ||
+            self.arena_state.status == ArenaStatus::EndRatioBelow as u8,
             BettingError::ArenaNotFinished
         );
         // check bet result
@@ -125,7 +126,9 @@ impl<'info> ClaimReward<'info> {
 pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
     let accts = ctx.accounts;
-    if accts.arena_state.status == ArenaStatus::EndFail as u8 {
+
+    // winner_ratio is < 1, winner returns back his bet amount.
+    if accts.arena_state.status == ArenaStatus::EndRatioBelow as u8 {
         let signer_seeds = &[
             GLOBAL_STATE_SEED,
             &[*(ctx.bumps.get("global_state").unwrap())],
@@ -137,57 +140,67 @@ pub fn handler(ctx: Context<ClaimReward>, arena_id: u64) -> Result<()> {
         accts.user_bet_state.is_claimed = 1;
         return Ok(());
     }
+    // total bet amount = up + down
     let bet_total_amount = accts
         .arena_state
         .up_amount
         .checked_add(accts.arena_state.down_amount)
         .unwrap();
 
-    let platform_fee = (bet_total_amount as u128)
-        .checked_mul(accts.global_state.platform_fee_rate as u128)
-        .unwrap()
-        .checked_div(FEE_RATE_DENOMINATOR as u128)
-        .unwrap();
-    let total_reward = (bet_total_amount as u128)
-        .checked_sub(platform_fee)
-        .unwrap();
-
-    // user reward = total * (mybetUp / totalbetInMySide)
+    // user reward = bet_total_amount * (mybetUp / totalbetInMySide)
     let total_user_success_bet = if accts.arena_state.bet_result == 0 {
         accts.arena_state.down_amount
     } else {
         accts.arena_state.up_amount
     };
 
-    let user_reward = total_reward
+    // user's reward
+    let user_reward = u128::from(bet_total_amount)
         .checked_mul(accts.user_bet_state.bet_amount as u128)
         .unwrap()
         .checked_div(total_user_success_bet as u128)
         .unwrap();
 
-    let ref_fee = user_reward
-    .checked_mul(accts.global_state.referral_fee_rate as u128).unwrap()
-    .checked_div(FEE_RATE_DENOMINATOR as u128).unwrap();
+    // Fee for platform = user's reward * platformFeeRate
+    let platform_fee = user_reward
+        .checked_mul(accts.global_state.platform_fee_rate as u128)
+        .unwrap()
+        .checked_div(FEE_RATE_DENOMINATOR as u128)
+        .unwrap();
 
-    accts.ref_user_state.ref_reward = accts.ref_user_state.ref_reward.checked_add(ref_fee as u64)
-    .unwrap();
+    // Referral Fee = Fee for platform * referralFeeRate
+    let ref_fee = platform_fee
+        .checked_mul(accts.global_state.referral_fee_rate as u128)
+        .unwrap()
+        .checked_div(FEE_RATE_DENOMINATOR as u128)
+        .unwrap();
 
-    let real_reward = user_reward.checked_sub(ref_fee).unwrap() as u64;
+    accts.ref_user_state.ref_reward = accts
+        .ref_user_state
+        .ref_reward
+        .checked_add(ref_fee as u64)
+        .unwrap();
+
+    // This is user's real reward which user will have had received
+    let user_real_reward = user_reward.checked_sub(platform_fee).unwrap() as u64;
 
     let signer_seeds = &[
         GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
     ];
+
     token::transfer(
         accts.claim_reward_context().with_signer(&[signer_seeds]),
-        real_reward,
+        user_real_reward,
     )?;
-    
+
     token::transfer(
-        accts.take_referral_fee_context().with_signer(&[signer_seeds]),
+        accts
+            .take_referral_fee_context()
+            .with_signer(&[signer_seeds]),
         ref_fee as u64,
     )?;
-    
+
     accts.user_bet_state.is_claimed = 1;
     Ok(())
 }

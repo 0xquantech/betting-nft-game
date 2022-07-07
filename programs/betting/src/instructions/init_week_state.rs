@@ -23,7 +23,7 @@ pub struct InitWeekState<'info> {
 
 impl<'info> InitWeekState<'info> {
     pub fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 

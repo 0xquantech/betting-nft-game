@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 import { mintTo } from "@solana/spl-token";
@@ -34,6 +34,8 @@ describe("betting", () => {
   const remainingUsers: Array<User> = [];
 
   const arenaId = 1;
+  const cancelledArenaId = 2;
+
   it("setup", async () => {
     await bettingAccounts.init(provider.connection);
     await admin.init(provider.connection, bettingAccounts);
@@ -76,7 +78,9 @@ describe("betting", () => {
   });
   
   it("FAIL: UserB double bet", async () => {
-    const tx = await userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */);
+    await expect(
+        userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */)
+    ).is.rejected;
   });
 
   it("UserC Bet to Down, 1500 USDC", async () => {
@@ -104,7 +108,9 @@ describe("betting", () => {
   });
 
   it("FAIL: UserD Bet to Down, 1500 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userD, admin.publicKey, arenaId, 1500, false /** down */);
+    await expect(
+      userBet(bettingAccounts, userD, admin.publicKey, arenaId, 1500, false /** down */)
+    ).is.rejected;
   });
 
   it("UserA claim Reward", async () => {
@@ -142,4 +148,35 @@ describe("betting", () => {
   it("Claim Ref reward", async () => {
     await claimRefReward(bettingAccounts, userD);
   })
+
+  it("Open Arena", async () => {
+    const tx = await openArena(bettingAccounts, admin, cancelledArenaId);
+  })
+
+  it("UserA Bet to Up, 1000 USDC", async () => {
+    const tx = await userBet(bettingAccounts, userA, userD.publicKey, cancelledArenaId, 1000, true /** up */);
+  });
+
+  it("UserB Bet to Up, 2000 USDC", async () => {
+    const tx = await userBet(bettingAccounts, userB, userD.publicKey, cancelledArenaId, 2000, true /** up */);
+  });
+
+  it("Start Arena", async () => {
+    const tx = await startArena(bettingAccounts, admin, cancelledArenaId);
+  });
+
+  it("Cancel Arena", async () => {
+    const tx = await cancelArena(bettingAccounts, admin, cancelledArenaId);
+  });
+
+  it("FAIL: UserA claim Reward: can't claim in cancelled arena", async () => {
+    await expect(
+      claimReward(bettingAccounts, userA, userD, cancelledArenaId)
+    ).is.rejected;
+  });
+  
+  it("Return Bet", async () => {
+    const tx = await returnBet(bettingAccounts, admin, cancelledArenaId);
+  });
+
 });

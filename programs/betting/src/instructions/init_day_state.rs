@@ -23,7 +23,7 @@ pub struct InitDayState<'info> {
 
 impl<'info> InitDayState<'info> {
     pub fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 

@@ -47,7 +47,7 @@ pub struct ClaimDayRankReward<'info> {
       payer = user
     )]
     pub user_feel_ata: Box<Account<'info, TokenAccount>>,
-    
+
     pub rank_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -57,12 +57,16 @@ pub struct ClaimDayRankReward<'info> {
 
 impl<'info> ClaimDayRankReward<'info> {
     fn validate(&self) -> Result<()> {
-      let last = self.day_result.tiers.len() - 1;
-      require!(self.user_day_state.bet_amount >= self.day_result.tiers[last],
-        BettingError::UnableToClaim);
-      require!(self.user_day_state.is_claimed == 0,
-         BettingError::AlreadyClaimed);
-      Ok(())
+        let last = self.day_result.tiers.len() - 1;
+        require!(
+            self.user_day_state.bet_amount >= self.day_result.tiers[last],
+            BettingError::UnableToClaim
+        );
+        require!(
+            self.user_day_state.is_claimed == 0,
+            BettingError::AlreadyClaimed
+        );
+        Ok(())
     }
     fn claim_reward_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
@@ -84,14 +88,14 @@ pub fn handler(ctx: Context<ClaimDayRankReward>, day: u64) -> Result<()> {
     let tiers = accts.day_result.tiers;
     let last = tiers.len() - 1;
     for i in last..=0 {
-      if accts.user_day_state.bet_amount >= tiers[i] {
-        reward_amount = accts.day_result.reward_per_tier[i];
-        break;
-      }
+        if accts.user_day_state.bet_amount >= tiers[i] {
+            reward_amount = accts.day_result.reward_per_tier[i];
+            break;
+        }
     }
 
     let signer_seeds = &[
-      GLOBAL_STATE_SEED,
+        GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
     ];
     // to freelancer

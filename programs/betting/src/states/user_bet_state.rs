@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 #[derive(Default)]
 pub struct UserBetState {
     pub user: Pubkey,
-    
+
     pub bet_timestamp: u64,
     pub arena_id: u64,
     pub bet_amount: u64,

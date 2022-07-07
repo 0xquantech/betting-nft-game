@@ -37,7 +37,7 @@ pub struct EndWeek<'info> {
 
 impl<'info> EndWeek<'info> {
     fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 
@@ -48,6 +48,6 @@ pub fn handler(ctx: Context<EndWeek>, week: u64, tiers: [u64; 9], rewards: [u64;
     ctx.accounts.week_result.tiers = tiers;
     ctx.accounts.week_result.reward_per_tier = rewards;
     ctx.accounts.week_result.week = week;
-    
+
     Ok(())
 }

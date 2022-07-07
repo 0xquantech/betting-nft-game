@@ -10,7 +10,7 @@ pub struct ArenaState {
     pub duration: u64,
 
     pub status: u8,
-    
+
     pub up_amount: u64,
     pub up_count: u64,
     pub down_amount: u64,
@@ -19,6 +19,6 @@ pub struct ArenaState {
     pub final_price: u64,
     pub end_timestamp: u64,
     pub bet_result: u8,
-    
+
     pub reserves: [u64; 12],
 }

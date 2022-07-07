@@ -48,3 +48,9 @@ pub use claim_day_rank_reward::*;
 
 pub mod claim_week_rank_reward;
 pub use claim_week_rank_reward::*;
+
+pub mod return_bet;
+pub use return_bet::*;
+
+pub mod cancel_arena;
+pub use cancel_arena::*;

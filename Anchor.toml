@@ -21,7 +21,7 @@ betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "./test-key.json"
 
 [scripts]

@@ -22,7 +22,8 @@ pub struct EndArena<'info> {
         bump,
         has_one = authority,
         has_one = pyth_account,
-        has_one = treasury
+        has_one = treasury,
+        has_one = token_mint
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
@@ -64,11 +65,14 @@ pub struct EndArena<'info> {
 
 impl<'info> EndArena<'info> {
     fn validate(&self) -> Result<()> {
-        require!(self.arena_state.status == ArenaStatus::Started as u8, BettingError::ArenaNotStarted);
+        require!(
+            self.arena_state.status == ArenaStatus::Started as u8,
+            BettingError::ArenaNotStarted
+        );
         Ok(())
     }
     // CHECK: when take fee
-    fn take_fee_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
+    fn to_treasury_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),
             Transfer {
@@ -100,32 +104,78 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
         };
 
     if accts.arena_state.up_amount == 0 || accts.arena_state.down_amount == 0 {
-        accts.arena_state.status = ArenaStatus::EndFail as u8;
-    } else {
-        accts.arena_state.status = ArenaStatus::EndSuccess as u8;
-        msg!("locked price = {:?}", accts.arena_state.locked_price);
-        msg!("final price = {:?}", accts.arena_state.final_price);
-        msg!("bet_result = {:?}", accts.arena_state.bet_result);
+        return Err(error!(BettingError::ArenaFailed));
+    }
+    msg!("locked price = {:?}", accts.arena_state.locked_price);
+    msg!("final price = {:?}", accts.arena_state.final_price);
+    msg!("bet_result = {:?}", accts.arena_state.bet_result);
 
-        let bet_total_amount = accts
-            .arena_state
-            .up_amount
-            .checked_add(accts.arena_state.down_amount)
-            .unwrap();
-        let platform_fee = (bet_total_amount as u128)
-            .checked_mul(accts.global_state.platform_fee_rate as u128)
+    let bet_total_amount = accts
+        .arena_state
+        .up_amount
+        .checked_add(accts.arena_state.down_amount)
+        .unwrap();
+
+    let platform_fee = (bet_total_amount as u128)
+        .checked_mul(accts.global_state.platform_fee_rate as u128)
+        .unwrap()
+        .checked_div(FEE_RATE_DENOMINATOR as u128)
+        .unwrap();
+    
+    // expected reward amount for winners
+    let expected_reward = bet_total_amount.checked_sub(platform_fee as u64).unwrap();
+
+    // total of winners bet amount
+    let total_user_success_bet = if accts.arena_state.bet_result == 0 {
+        accts.arena_state.down_amount
+    } else {
+        accts.arena_state.up_amount
+    };
+
+    // if winner ratio is < 1, basically betting is failed
+    if expected_reward < total_user_success_bet {
+
+        // total amount of failed bet
+        let total_user_fail_bet = if accts.arena_state.bet_result == 1 {
+            accts.arena_state.down_amount
+        } else {
+            accts.arena_state.up_amount
+        };
+
+        // send to treasury
+        let signer_seeds = &[
+            GLOBAL_STATE_SEED,
+            &[*(ctx.bumps.get("global_state").unwrap())],
+        ];
+        token::transfer(
+            accts.to_treasury_context().with_signer(&[signer_seeds]),
+            total_user_fail_bet as u64,
+        )?;
+
+        accts.arena_state.status = ArenaStatus::EndRatioBelow as u8;
+    } else {
+        // Referral Fee = Fee for platform * referralFeeRate
+        let ref_fee = platform_fee
+            .checked_mul(accts.global_state.referral_fee_rate as u128)
             .unwrap()
             .checked_div(FEE_RATE_DENOMINATOR as u128)
             .unwrap();
+
+        // real platform fee = platform_fee - referal fee
+        let real_platform_fee = platform_fee.checked_sub(ref_fee).unwrap();
 
         let signer_seeds = &[
             GLOBAL_STATE_SEED,
             &[*(ctx.bumps.get("global_state").unwrap())],
         ];
         token::transfer(
-            accts.take_fee_context().with_signer(&[signer_seeds]),
-            platform_fee as u64,
+            accts.to_treasury_context().with_signer(&[signer_seeds]),
+            real_platform_fee as u64,
         )?;
+
+        accts.arena_state.status = ArenaStatus::EndSuccess as u8;
     }
+
+
     Ok(())
 }

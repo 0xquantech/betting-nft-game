@@ -47,7 +47,7 @@ pub struct ClaimHourRankReward<'info> {
       payer = user
     )]
     pub user_feel_ata: Box<Account<'info, TokenAccount>>,
-    
+
     pub rank_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
@@ -57,13 +57,16 @@ pub struct ClaimHourRankReward<'info> {
 
 impl<'info> ClaimHourRankReward<'info> {
     fn validate(&self) -> Result<()> {
-      
-    let last = self.hour_result.tiers.len() - 1;
-      require!(self.user_hour_state.bet_amount >= self.hour_result.tiers[last],
-        BettingError::UnableToClaim);
-      require!(self.user_hour_state.is_claimed == 0,
-         BettingError::AlreadyClaimed);
-      Ok(())
+        let last = self.hour_result.tiers.len() - 1;
+        require!(
+            self.user_hour_state.bet_amount >= self.hour_result.tiers[last],
+            BettingError::UnableToClaim
+        );
+        require!(
+            self.user_hour_state.is_claimed == 0,
+            BettingError::AlreadyClaimed
+        );
+        Ok(())
     }
     fn claim_reward_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
@@ -85,13 +88,13 @@ pub fn handler(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
     let tiers = accts.hour_result.tiers;
     let last = tiers.len() - 1;
     for i in last..=0 {
-      if accts.user_hour_state.bet_amount >= tiers[i] {
-        reward_amount = accts.hour_result.reward_per_tier[i];
-        break;
-      }
+        if accts.user_hour_state.bet_amount >= tiers[i] {
+            reward_amount = accts.hour_result.reward_per_tier[i];
+            break;
+        }
     }
     let signer_seeds = &[
-      GLOBAL_STATE_SEED,
+        GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
     ];
     // to freelancer

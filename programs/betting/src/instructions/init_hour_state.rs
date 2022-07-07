@@ -23,7 +23,7 @@ pub struct InitHourState<'info> {
 
 impl<'info> InitHourState<'info> {
     pub fn validate(&self) -> Result<()> {
-      Ok(())
+        Ok(())
     }
 }
 
@@ -31,6 +31,6 @@ impl<'info> InitHourState<'info> {
 pub fn handler(ctx: Context<InitHourState>, user_key: Pubkey, hour: u64) -> Result<()> {
     let accts = ctx.accounts;
     accts.user_hour_state.user = user_key;
-    accts.user_hour_state.start_time = hour.checked_mul(ONE_HOUR).unwrap();;
+    accts.user_hour_state.start_time = hour.checked_mul(ONE_HOUR).unwrap();
     Ok(())
 }
