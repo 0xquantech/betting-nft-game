@@ -20,7 +20,6 @@ let provider = new anchor.Provider(connection, new NodeWallet(admin), anchor.Pro
 const program = new anchor.Program(IDL, Constants.PROGRAM_ID, provider);
 
 const cancelArena = async (arenaId: number) => {
-  
   const globalStateKey = await keys.getGlobalStateKey();
   let txHash = await program.methods
     .cancelArena(new BN(arenaId))
@@ -32,6 +31,7 @@ const cancelArena = async (arenaId: number) => {
     })
     .signers([admin])
     .rpc();
+
   console.log("txHash =", txHash);
 }
 

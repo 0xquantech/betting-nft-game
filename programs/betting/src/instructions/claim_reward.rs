@@ -1,12 +1,10 @@
 use anchor_lang::prelude::*;
 
-use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
+use crate::{constants::*, error::*, states::*};
 use anchor_spl::{
-    associated_token::{self, AssociatedToken},
+    associated_token::{AssociatedToken},
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
-
-use std::mem::size_of;
 
 #[derive(Accounts)]
 #[instruction(arena_id: u64)]
@@ -84,8 +82,8 @@ impl<'info> ClaimReward<'info> {
         // require!(current_time > )
 
         require!(
-            self.arena_state.status == ArenaStatus::EndSuccess as u8 ||
-            self.arena_state.status == ArenaStatus::EndRatioBelow as u8,
+            self.arena_state.status == ArenaStatus::EndSuccess as u8
+                || self.arena_state.status == ArenaStatus::EndRatioBelow as u8,
             BettingError::ArenaNotFinished
         );
         // check bet result

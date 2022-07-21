@@ -3,8 +3,13 @@ use anchor_lang::prelude::*;
 use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount, Transfer},
+    token::{self, Mint, Token, TokenAccount, Transfer, MintTo},
 };
+use mpl_token_metadata::{
+    ID as MetadataProgramId,
+};
+
+#[warn(unused_doc_comments)]
 
 #[derive(Accounts)]
 #[instruction(hour: u64)]
@@ -51,6 +56,9 @@ pub struct ClaimHourRankReward<'info> {
     pub rank_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(address = MetadataProgramId)]
+    /// CHECK:
+    pub token_metadata_program: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -68,6 +76,7 @@ impl<'info> ClaimHourRankReward<'info> {
         );
         Ok(())
     }
+    
     fn claim_reward_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),
@@ -78,31 +87,64 @@ impl<'info> ClaimHourRankReward<'info> {
             },
         )
     }
+
 }
 
 #[access_control(ctx.accounts.validate())]
-pub fn handler(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
+pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>, hour: u64) -> Result<()> {
     let accts = ctx.accounts;
+    let rem_accts = &mut ctx.remaining_accounts.iter();
 
-    let mut reward_amount = 0;
-    let tiers = accts.hour_result.tiers;
-    let last = tiers.len() - 1;
-    for i in last..=0 {
-        if accts.user_hour_state.bet_amount >= tiers[i] {
-            reward_amount = accts.hour_result.reward_per_tier[i];
-            break;
-        }
-    }
+    let position = accts
+        .hour_result
+        .tiers
+        .iter()
+        .position(|tier| accts.user_hour_state.bet_amount >= *tier)
+        .unwrap();
+
+    // token transfer
+    let reward_amount = accts.hour_result.reward_per_tier[position];
     let signer_seeds = &[
         GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
     ];
-    // to freelancer
     token::transfer(
         accts.claim_reward_context().with_signer(&[signer_seeds]),
         reward_amount,
     )?;
+    // let token_pro = accts.token_program.to_account_info();
+
+    // nft reward if user is the top
+    // remaining accounts
+    // 1. fragmentMinterKey
+    // 2. mintKey
+    // 3. accountKey
+    // 4. metadataKey
+    
+    if position == 0 {
+        let current_time = Clock::get()?.unix_timestamp as u64;
+        let sel_rand_id = (current_time % 9) as usize;
+        let fragment_minter = next_account_info(rem_accts)?;
+        let fragment_mint = next_account_info(rem_accts)?;
+        let fragment_ata = next_account_info(rem_accts)?;
+        let fragment_metadata = next_account_info(rem_accts)?;
+        mint_fragment(
+            fragment_mint.to_account_info(),
+            fragment_ata.to_account_info(),
+            fragment_metadata.to_account_info(),
+            fragment_minter.to_account_info(),
+            accts.user.to_account_info(),
+            accts.token_metadata_program.to_account_info(),
+            accts.token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
+            accts.global_state.treasury,
+            ctx.program_id,
+            sel_rand_id
+        )?;
+    }
 
     accts.user_hour_state.is_claimed = 1;
+    
     Ok(())
 }

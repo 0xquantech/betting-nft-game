@@ -1,6 +1,8 @@
 import {
   PublicKey,
+  AccountMeta,
   Keypair,
+  Signer,
   Transaction,
   TransactionInstruction,
   SystemProgram,
@@ -11,6 +13,10 @@ import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
   getAssociatedTokenAddress,
+  createInitializeMintInstruction,
+  createInitializeAccountInstruction,
+  createAssociatedTokenAccountInstruction,
+  MINT_SIZE
 } from "@solana/spl-token";
 
 import bs58 from 'bs58';
@@ -24,7 +30,7 @@ import * as keys from "./keys";
 import { User } from "./user";
 import { BettingAccounts } from "./accounts";
 import { assert } from "chai";
-import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks } from "./utils";
+import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks, getEightBoxId } from "./utils";
 
 const program = anchor.workspace.Betting as anchor.Program<Betting>;
 const connection = program.provider.connection;
@@ -169,13 +175,17 @@ export const userBet = async (
   }
 
   let dateNow = Date.now();
+  
   let hour = getPassedHours(dateNow);
   let day = getPassedDays(dateNow);
   let week = getPassedWeeks(dateNow);
+  let eight_box_id = getEightBoxId(dateNow);
 
   let hourStateKey = await keys.getUserHourStateKey(user.publicKey, hour);
   let dayStateKey = await keys.getUserDayStateKey(user.publicKey, day);
   let weekStateKey = await keys.getUserWeekStateKey(user.publicKey, week);
+  let eightBoxStateKey = await keys.getEightBoxStateKey(user.publicKey, eight_box_id);
+
   if (!(await fetchHourState(hourStateKey))) {
     transaction.add(await program.methods
       .initHourState(user.publicKey, hour)
@@ -213,8 +223,20 @@ export const userBet = async (
       .instruction()
     )
   }
+  if (!(await fetchEightBoxState(eightBoxStateKey))) {
+    transaction.add(await program.methods
+      .initEightBoxState(user.publicKey, eight_box_id)
+      .accounts({
+        payer: user.publicKey,
+        eightBoxState: eightBoxStateKey,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      })
+      .instruction()
+    )
+  }
   transaction.add(await program.methods
-    .userBet(new BN(arenaId), amountInDecimal, hour, day, week, betSide ? 1 : 0, refKey, hash_arr)
+    .userBet(new BN(arenaId), amountInDecimal, hour, day, week, eight_box_id, betSide ? 1 : 0, refKey, hash_arr)
     .accounts({
       user: user.publicKey,
       globalState: await keys.getGlobalStateKey(),
@@ -224,6 +246,7 @@ export const userBet = async (
       userHourState: hourStateKey,
       userDayState: dayStateKey,
       userWeekState: weekStateKey,
+      eightBoxState: eightBoxStateKey,
       userAta: user.bettingMintAta,
       escrowAta: accts.escrowAta,
       tokenMint: accts.bettingMint,
@@ -556,7 +579,6 @@ export const endWeek = async (accts: BettingAccounts, admin: User) => {
   );
 };
 
-
 export const claimHourRankReward = async (
   accts: BettingAccounts, 
   user: User,
@@ -577,7 +599,26 @@ export const claimHourRankReward = async (
   );
   
   let hourStateKey = await keys.getUserHourStateKey(user.publicKey, hour);
-  await sendOrSimulateTransaction(await program.methods
+  let hourResultKey = await keys.getHourResultKey(hour);
+
+  let rank = await program.methods
+    .getHourRank()
+    .accounts({
+      userHourState: hourStateKey,
+      hourResult: hourResultKey,
+    }).view();
+  console.log("rank =", rank);
+
+  let remainingAccounts: AccountMeta[] = [];
+  let signers = [];
+  let instructions = [];
+  let transaction = new Transaction();
+  if (rank == 1) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers);
+    transaction.add(...instructions);
+  }
+
+  transaction.add(await program.methods
     .claimHourRankReward(hour)
     .accounts({
       user: user.publicKey,
@@ -589,13 +630,22 @@ export const claimHourRankReward = async (
       rankMint: accts.rankMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
+    .remainingAccounts([...remainingAccounts])
     .signers([user.keypair])
-    .transaction(),
-    [user.keypair],
-    connection
+    .instruction());
+  
+  console.log("tx =", transaction);
+  console.log("keypairs =", [user.keypair, ...signers]);
+
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
   );
 };
 
@@ -620,25 +670,51 @@ export const claimDayRankReward = async (
   );
   
   let dayStateKey = await keys.getUserDayStateKey(user.publicKey, day);
-  await sendOrSimulateTransaction(await program.methods
+  let dayResultKey = await keys.getDayResultKey(day);
+
+  let rank = await program.methods
+    .getDayRank()
+    .accounts({
+      userDayState: dayStateKey,
+      dayResult: dayResultKey,
+    }).view();
+  console.log("rank =", rank);
+  
+  let remainingAccounts: AccountMeta[] = [];
+  let signers = [];
+  let instructions = [];
+  let transaction = new Transaction();
+  
+  if (rank == 1) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers);
+    transaction.add(...instructions);
+  }
+  
+  transaction.add(await program.methods
     .claimDayRankReward(day)
     .accounts({
       user: user.publicKey,
       globalState: globalStateKey,
       feelVaultAta,
       userDayState: dayStateKey,
-      dayResult: await keys.getDayResultKey(day),
+      dayResult: dayResultKey,
       userFeelAta,
       rankMint: accts.rankMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
+    .remainingAccounts([...remainingAccounts])
     .signers([user.keypair])
-    .transaction(),
-    [user.keypair],
-    connection
+    .instruction()
+  );
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
   );
 };
 
@@ -663,25 +739,56 @@ export const claimWeekRankReward = async (
   );
   
   let weekStateKey = await keys.getUserWeekStateKey(user.publicKey, week);
-  await sendOrSimulateTransaction(await program.methods
+  let weekResultKey = await keys.getWeekResultKey(week);
+
+  let rank = await program.methods
+    .getWeekRank()
+    .accounts({
+      userWeekState: weekStateKey,
+      weekResult: weekResultKey,
+    }).view();
+  console.log("rank =", rank);
+
+  let transaction = new Transaction();
+  let remainingAccounts: AccountMeta[] = [];
+  let signers = [];
+  let instructions = [];
+  if (rank == 1) {
+    await prepareMintNft(user, remainingAccounts, instructions, signers);
+    transaction.add(...instructions);
+  } else if (rank == 2) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers, 3);
+    transaction.add(...instructions);
+  } else if (rank == 3) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers, 1);
+    transaction.add(...instructions);
+  }
+
+  transaction.add(await program.methods
     .claimWeekRankReward(week)
     .accounts({
       user: user.publicKey,
       globalState: globalStateKey,
       feelVaultAta,
       userWeekState: weekStateKey,
-      weekResult: await keys.getWeekResultKey(week),
+      weekResult: weekResultKey,
       userFeelAta,
       rankMint: accts.rankMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
+    .remainingAccounts([...remainingAccounts])
     .signers([user.keypair])
-    .transaction(),
-    [user.keypair],
-    connection
+    .instruction()
+  );  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
   );
 };
 
@@ -725,4 +832,107 @@ export const fetchWeekState = async (
   return await fetchData("weekState", key);
 };
 
+export const fetchEightBoxState = async (
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["eightBoxState"] | null> => {
+  return await fetchData("eightBoxState", key);
+};
 
+export const prepareMintFragment = async (
+  wallet: any,
+  remainingAccounts: AccountMeta[],
+  instructions: TransactionInstruction[],
+  signers: Signer[],
+  count: number = 1
+) => {
+  let fragmentMinterKey = await keys.getFragmentMinterKey();
+  remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: fragmentMinterKey });
+
+  for (let i = 0; i < count; i ++) {
+    let newNftMint = Keypair.generate();
+    signers.push(newNftMint);
+
+    instructions.push(SystemProgram.createAccount({
+      fromPubkey: wallet.publicKey,
+      newAccountPubkey: newNftMint.publicKey,
+      space: MINT_SIZE,
+      lamports: await connection.getMinimumBalanceForRentExemption(MINT_SIZE),
+      programId: TOKEN_PROGRAM_ID,
+    }));
+
+    instructions.push(createInitializeMintInstruction(
+      newNftMint.publicKey,
+      0,
+      fragmentMinterKey,
+      null
+    ));
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: newNftMint.publicKey } as AccountMeta);
+
+    let associatedAcc = await getAssociatedTokenAddress(
+      newNftMint.publicKey,
+      wallet.publicKey
+    );
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        wallet.publicKey,
+        associatedAcc,
+        wallet.publicKey,
+        newNftMint.publicKey
+      )
+    )
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: associatedAcc });
+
+    let metadataKey = await keys.getMetadataKey(newNftMint.publicKey);
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: metadataKey });
+  }
+}
+
+
+export const prepareMintNft = async (
+  wallet: any,
+  remainingAccounts: AccountMeta[],
+  instructions: TransactionInstruction[],
+  signers: Signer[],
+  count: number = 1
+) => {
+  let nftMinterKey = await keys.getNftMinterKey();
+  remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: nftMinterKey });
+
+  for (let i = 0; i < count; i ++) {
+    let newNftMint = Keypair.generate();
+    signers.push(newNftMint);
+
+    instructions.push(SystemProgram.createAccount({
+      fromPubkey: wallet.publicKey,
+      newAccountPubkey: newNftMint.publicKey,
+      space: MINT_SIZE,
+      lamports: await connection.getMinimumBalanceForRentExemption(MINT_SIZE),
+      programId: TOKEN_PROGRAM_ID,
+    }));
+
+    instructions.push(createInitializeMintInstruction(
+      newNftMint.publicKey,
+      0,
+      nftMinterKey,
+      null
+    ));
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: newNftMint.publicKey } as AccountMeta);
+
+    let associatedAcc = await getAssociatedTokenAddress(
+      newNftMint.publicKey,
+      wallet.publicKey
+    );
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        wallet.publicKey,
+        associatedAcc,
+        wallet.publicKey,
+        newNftMint.publicKey
+      )
+    )
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: associatedAcc });
+
+    let metadataKey = await keys.getMetadataKey(newNftMint.publicKey);
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: metadataKey });
+  }
+}

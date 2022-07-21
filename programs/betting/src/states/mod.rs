@@ -10,6 +10,9 @@ pub use user_bet_state::*;
 pub mod user_state;
 pub use user_state::*;
 
+pub mod eight_box_state;
+pub use eight_box_state::*;
+
 pub mod hour_state;
 pub use hour_state::*;
 

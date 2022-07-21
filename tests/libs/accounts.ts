@@ -28,7 +28,7 @@ export class BettingAccounts {
   pythAccount: PublicKey;
   constructor() {
     this.payerAndAuth = Keypair.generate();
-    this.pythAccount = new PublicKey("H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG");
+    this.pythAccount = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix");
   }
   async init(connection: Connection) {
     this.globalStateKey = await keys.getGlobalStateKey();

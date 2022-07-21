@@ -1,15 +1,15 @@
 use anchor_lang::prelude::*;
 
-use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
+use crate::{constants::*, error::*, states::*, utils::*};
 use anchor_spl::{
-    associated_token::{self, AssociatedToken},
+    associated_token::{AssociatedToken},
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
 use std::mem::size_of;
 
 #[derive(Accounts)]
-#[instruction(arena_id: u64, b: u64, hour: u64, day: u64, week: u64)]
+#[instruction(arena_id: u64, b: u64, hour: u64, day: u64, week: u64, box_id: u64)]
 pub struct UserBet<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
@@ -43,6 +43,13 @@ pub struct UserBet<'info> {
       space = 8 + size_of::<UserBetState>()
     )]
     pub user_bet_state: Account<'info, UserBetState>,
+
+    #[account(
+        mut,
+        seeds = [EIGHT_BOX_STATE_SEED, user.key().as_ref(), &box_id.to_le_bytes()],
+        bump
+      )]
+    pub eight_box_state: Box<Account<'info, EightBoxState>>,
 
     #[account(
       mut,
@@ -144,6 +151,7 @@ pub fn handler(
     hour: u64,
     day: u64,
     week: u64,
+    box_id: u64,
     is_up: u8,
     ref_key: Pubkey,
     hash_key: [u8; 32],
@@ -175,6 +183,11 @@ pub fn handler(
 
     token::transfer(accts.bet_context(), bet_amount)?;
 
+    accts.eight_box_state.bet_amount = accts
+        .eight_box_state
+        .bet_amount
+        .checked_add(bet_amount)
+        .unwrap();
     accts.user_hour_state.bet_amount = accts
         .user_hour_state
         .bet_amount

@@ -1,16 +1,13 @@
 use anchor_lang::prelude::*;
 
-use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
+use crate::{constants::*, error::*, states::*};
 
 use anchor_spl::{
-    associated_token::{self, AssociatedToken},
+    associated_token::{AssociatedToken},
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 
 use pyth_client;
-
-use std::mem::size_of;
-
 #[derive(Accounts)]
 #[instruction(arena_id: u64)]
 pub struct EndArena<'info> {
@@ -121,7 +118,7 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
         .unwrap()
         .checked_div(FEE_RATE_DENOMINATOR as u128)
         .unwrap();
-    
+
     // expected reward amount for winners
     let expected_reward = bet_total_amount.checked_sub(platform_fee as u64).unwrap();
 
@@ -134,7 +131,6 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
 
     // if winner ratio is < 1, basically betting is failed
     if expected_reward < total_user_success_bet {
-
         // total amount of failed bet
         let total_user_fail_bet = if accts.arena_state.bet_result == 1 {
             accts.arena_state.down_amount
@@ -175,7 +171,6 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
 
         accts.arena_state.status = ArenaStatus::EndSuccess as u8;
     }
-
 
     Ok(())
 }

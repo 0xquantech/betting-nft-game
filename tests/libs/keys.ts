@@ -10,7 +10,12 @@ import {
   WEEK_STATE_SEED,
   HOUR_RESULT_SEED,
   DAY_RESULT_SEED,
-  WEEK_RESULT_SEED
+  WEEK_RESULT_SEED,
+  FRAGMENT_MINTER_SEED,
+  NFT_MINTER_SEED,
+  BUNDLE_MINTER_SEED,
+  EIGHT_BOX_STATE_SEED,
+  MetadataProgramId
 } from "./constants";
 import { asyncGetPda } from "./utils";
 import { getProgram } from "../program";
@@ -75,6 +80,15 @@ export const getUserWeekStateKey = async (userKey: PublicKey, week: BN) => {
   return key;
 };
 
+export const getEightBoxStateKey = async (userKey: PublicKey, box_id: BN) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(EIGHT_BOX_STATE_SEED), userKey.toBuffer(), box_id.toArrayLike(Buffer, "le", 8)],
+    program.programId
+  );
+  return key;
+};
+
+
 export const getHourResultKey = async (hour: BN) => {
   const [key] = await asyncGetPda(
     [Buffer.from(HOUR_RESULT_SEED), hour.toArrayLike(Buffer, "le", 8)],
@@ -98,3 +112,42 @@ export const getWeekResultKey = async (week: BN) => {
   );
   return key;
 };
+
+export const getFragmentMinterKey = async () => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(FRAGMENT_MINTER_SEED)],
+    program.programId
+  );
+  return key;
+};
+
+export const getBundleMinterKey = async () => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(BUNDLE_MINTER_SEED)],
+    program.programId
+  );
+  return key;
+};
+
+export const getNftMinterKey = async () => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(NFT_MINTER_SEED)],
+    program.programId
+  );
+  return key;
+};
+
+export async function getMetadataKey(
+  tokenMint: PublicKey
+): Promise<PublicKey> {
+  return (
+    await PublicKey.findProgramAddress(
+      [
+        Buffer.from("metadata"),
+        new PublicKey(MetadataProgramId).toBuffer(),
+        tokenMint.toBuffer(),
+      ],
+      new PublicKey(MetadataProgramId)
+    )
+  )[0];
+}

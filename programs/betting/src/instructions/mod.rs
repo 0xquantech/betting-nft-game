@@ -31,6 +31,9 @@ pub use init_day_state::*;
 pub mod init_week_state;
 pub use init_week_state::*;
 
+pub mod init_eight_box_state;
+pub use init_eight_box_state::*;
+
 pub mod end_hour;
 pub use end_hour::*;
 
@@ -48,6 +51,9 @@ pub use claim_day_rank_reward::*;
 
 pub mod claim_week_rank_reward;
 pub use claim_week_rank_reward::*;
+
+pub mod claim_eight_box;
+pub use claim_eight_box::*;
 
 pub mod return_bet;
 pub use return_bet::*;

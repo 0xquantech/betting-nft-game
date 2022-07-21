@@ -5,7 +5,9 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
-
+use mpl_token_metadata::{
+    ID as MetadataProgramId,
+};
 #[derive(Accounts)]
 #[instruction(week: u64)]
 pub struct ClaimWeekRankReward<'info> {
@@ -51,6 +53,9 @@ pub struct ClaimWeekRankReward<'info> {
     pub rank_mint: Box<Account<'info, Mint>>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
+    #[account(address = MetadataProgramId)]
+    /// CHECK:
+    pub token_metadata_program: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -81,19 +86,18 @@ impl<'info> ClaimWeekRankReward<'info> {
 }
 
 #[access_control(ctx.accounts.validate())]
-pub fn handler(ctx: Context<ClaimWeekRankReward>, week: u64) -> Result<()> {
+pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>, week: u64) -> Result<()> {
     let accts = ctx.accounts;
+    let rem_accts = &mut ctx.remaining_accounts.iter();
 
-    let mut reward_amount = 0;
-    let tiers = accts.week_result.tiers;
-    let last = tiers.len() - 1;
-    for i in last..=0 {
-        if accts.user_week_state.bet_amount >= tiers[i] {
-            reward_amount = accts.week_result.reward_per_tier[i];
-            break;
-        }
-    }
+    let position = accts
+        .week_result
+        .tiers
+        .iter()
+        .position(|tier| accts.user_week_state.bet_amount >= *tier)
+        .unwrap();
 
+    let reward_amount = accts.week_result.reward_per_tier[position];
     let signer_seeds = &[
         GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
@@ -103,7 +107,74 @@ pub fn handler(ctx: Context<ClaimWeekRankReward>, week: u64) -> Result<()> {
         accts.claim_reward_context().with_signer(&[signer_seeds]),
         reward_amount,
     )?;
+    let current_time = Clock::get()?.unix_timestamp as u64;
+    if position == 0 {
+        let nft_minter = next_account_info(rem_accts)?;
+        let nft_mint = next_account_info(rem_accts)?;
+        let nft_ata = next_account_info(rem_accts)?;
+        let nft_metadata = next_account_info(rem_accts)?;
+        mint_nft(
+            nft_mint.to_account_info(),
+            nft_ata.to_account_info(),
+            nft_metadata.to_account_info(),
+            nft_minter.to_account_info(),
+            accts.user.to_account_info(),
+            accts.token_metadata_program.to_account_info(),
+            accts.token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
+            accts.global_state.treasury,
+            ctx.program_id
+        )?;
+    }
+    if position == 1 {
+        
+        let fragment_minter = next_account_info(rem_accts)?;
 
+        for i in 0..3 {
+            let fragment_id = (current_time % 9) as usize;
+            let fragment_mint = next_account_info(rem_accts)?;
+            let fragment_ata = next_account_info(rem_accts)?;
+            let fragment_metadata = next_account_info(rem_accts)?;
+
+            mint_fragment(
+                fragment_mint.to_account_info(),
+                fragment_ata.to_account_info(),
+                fragment_metadata.to_account_info(),
+                fragment_minter.to_account_info(),
+                accts.user.to_account_info(),
+                accts.token_metadata_program.to_account_info(),
+                accts.token_program.to_account_info(),
+                accts.system_program.to_account_info(),
+                accts.rent.to_account_info(),
+                accts.global_state.treasury,
+                ctx.program_id,
+                fragment_id
+            )?;
+        }
+    }
+    if position == 2 {
+        let fragment_minter = next_account_info(rem_accts)?;
+        let fragment_id = (current_time % 9) as usize;
+        let fragment_mint = next_account_info(rem_accts)?;
+        let fragment_ata = next_account_info(rem_accts)?;
+        let fragment_metadata = next_account_info(rem_accts)?;
+
+        mint_fragment(
+            fragment_mint.to_account_info(),
+            fragment_ata.to_account_info(),
+            fragment_metadata.to_account_info(),
+            fragment_minter.to_account_info(),
+            accts.user.to_account_info(),
+            accts.token_metadata_program.to_account_info(),
+            accts.token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
+            accts.global_state.treasury,
+            ctx.program_id,
+            fragment_id
+        )?;
+    }
     accts.user_week_state.is_claimed = 1;
     Ok(())
 }

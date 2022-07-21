@@ -8,6 +8,9 @@ pub enum BettingError {
     #[msg("You are not authorized to perform this action.")]
     NotAllowedAuthority,
 
+    #[msg("Invalid Parameter")]
+    InvalidParameter,
+
     #[msg("You are not winner.")]
     BetResultMisMatch,
 

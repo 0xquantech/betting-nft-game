@@ -1,11 +1,7 @@
 use anchor_lang::prelude::*;
-
 use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
-use anchor_spl::token::{Mint, Token, TokenAccount};
 
 use pyth_client;
-
-use std::mem::size_of;
 
 #[derive(Accounts)]
 #[instruction(arena_id: u64)]

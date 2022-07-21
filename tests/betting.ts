@@ -20,7 +20,7 @@ chaiUse(chaiAsPromised);
 
 describe("betting", () => {
   // Configure the client to use the local cluster.
-  const provider = anchor.Provider.env();
+  const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
 
   const program = anchor.workspace.Betting as Program<Betting>;
@@ -44,7 +44,7 @@ describe("betting", () => {
     await userC.init(provider.connection, bettingAccounts);
     await userD.init(provider.connection, bettingAccounts);
 
-    for (let i = 0; i < 10; i ++) {
+    for (let i = 0; i < 1; i ++) {
       let user = new User();
       await user.init(provider.connection, bettingAccounts);
       remainingUsers.push(user);
@@ -69,8 +69,8 @@ describe("betting", () => {
     const tx = await openArena(bettingAccounts, admin, arenaId);
   })
 
-  it("UserA Bet to Up, 1000 USDC", async () => {
-    const tx = await userBet(bettingAccounts, userA, userD.publicKey, arenaId, 1000, true /** up */);
+  it("UserA Bet to Up, 2500 USDC", async () => {
+    const tx = await userBet(bettingAccounts, userA, userD.publicKey, arenaId, 2500, true /** up */);
   });
 
   it("UserB Bet to Up, 2000 USDC", async () => {

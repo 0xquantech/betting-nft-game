@@ -12,8 +12,11 @@ pub mod instructions;
 pub mod states;
 /// utils
 pub mod utils;
+/// views
+pub mod views;
 
 use crate::instructions::*;
+use crate::views::*;
 
 #[program]
 pub mod betting {
@@ -42,12 +45,13 @@ pub mod betting {
         hour: u64,
         day: u64,
         week: u64,
+        box_id: u64,
         bet_side: u8,
         ref_key: Pubkey,
         hash_key: [u8; 32],
     ) -> Result<()> {
         user_bet::handler(
-            ctx, arena_id, bet_amount, hour, day, week, bet_side, ref_key, hash_key,
+            ctx, arena_id, bet_amount, hour, day, week, box_id, bet_side, ref_key, hash_key,
         )
     }
 
@@ -83,6 +87,10 @@ pub mod betting {
         init_week_state::handler(ctx, user_key, week)
     }
 
+    pub fn init_eight_box_state(ctx: Context<InitEightBoxState>, user_key: Pubkey, box_id: u64) -> Result<()> {
+        init_eight_box_state::handler(ctx, user_key, box_id)
+    }
+
     pub fn end_hour(
         ctx: Context<EndHour>,
         hour: u64,
@@ -110,15 +118,32 @@ pub mod betting {
         end_week::handler(ctx, week, tiers, rewards)
     }
 
-    pub fn claim_hour_rank_reward(ctx: Context<ClaimHourRankReward>, hour: u64) -> Result<()> {
+    pub fn claim_eight_box<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimEightBox<'info>>, box_id: u64) -> Result<()> {
+        claim_eight_box::handler(ctx, box_id)
+    }
+
+    pub fn claim_hour_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>, hour: u64) -> Result<()> {
         claim_hour_rank_reward::handler(ctx, hour)
     }
 
-    pub fn claim_day_rank_reward(ctx: Context<ClaimDayRankReward>, day: u64) -> Result<()> {
+    pub fn claim_day_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankReward<'info>>, day: u64) -> Result<()> {
         claim_day_rank_reward::handler(ctx, day)
     }
 
-    pub fn claim_week_rank_reward(ctx: Context<ClaimWeekRankReward>, week: u64) -> Result<()> {
+    pub fn claim_week_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>, week: u64) -> Result<()> {
         claim_week_rank_reward::handler(ctx, week)
     }
+
+    pub fn get_hour_rank(ctx: Context<GetHourRank>) -> Result<u8> {
+        get_hour_rank::handler(ctx)
+    }
+    
+    pub fn get_day_rank(ctx: Context<GetDayRank>) -> Result<u8> {
+        get_day_rank::handler(ctx)
+    }
+    
+    pub fn get_week_rank(ctx: Context<GetWeekRank>) -> Result<u8> {
+        get_week_rank::handler(ctx)
+    }
+    
 }

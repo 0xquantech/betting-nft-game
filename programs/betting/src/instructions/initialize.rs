@@ -1,7 +1,7 @@
 use crate::{constants::*, error::*, states::*};
 use anchor_lang::prelude::*;
 use anchor_spl::{
-    associated_token::{self, AssociatedToken},
+    associated_token::AssociatedToken,
     token::{Mint, Token, TokenAccount},
 };
 

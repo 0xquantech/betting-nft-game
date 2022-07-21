@@ -1,11 +1,5 @@
 use anchor_lang::prelude::*;
-
-use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
-
-use anchor_spl::{
-    associated_token::{self, AssociatedToken},
-    token::{self, Mint, Token, TokenAccount, Transfer},
-};
+use crate::{constants::*, states::*};
 
 use std::mem::size_of;
 

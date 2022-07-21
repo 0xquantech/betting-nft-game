@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 
 #[account]
 #[derive(Default)]
-pub struct WeekState {
+pub struct EightBoxState {
     pub user: Pubkey,
     pub start_time: u64,
     pub bet_amount: u64,

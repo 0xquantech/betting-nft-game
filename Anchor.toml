@@ -2,11 +2,15 @@
 seeds = false
 
 [test.validator]
-url = "https://api.metaplex.solana.com"
+url = "https://api.devnet.solana.com"
 
 # pyth_account
 [[test.validator.clone]]
-address = "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG"
+address = "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix"
+[[test.validator.clone]]
+address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+[[test.validator.clone]]
+address = "PwDiXFxQsGra4sFFTT8r1QWRMd4vfumiWC1jfWNfdYT"
 
 [programs.localnet]
 betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
@@ -21,7 +25,7 @@ betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "devnet"
+cluster = "localnet"
 wallet = "./test-key.json"
 
 [scripts]

@@ -56,6 +56,6 @@ pub fn handler(ctx: Context<CancelArena>, arena_id: u64) -> Result<()> {
 
     // arena is cancelled.
     accts.arena_state.status = ArenaStatus::Cancelled as u8;
-        
+
     Ok(())
 }

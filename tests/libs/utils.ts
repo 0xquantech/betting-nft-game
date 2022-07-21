@@ -138,7 +138,9 @@ export const getHashArr = (hashStr: string) => {
   }
   return arrHash;
 }
-
+export const getEightBoxId = (val: number): BN => {
+  return new BN(Math.floor(val / (ONE_HOUR_MS * 8)));
+}
 export const getPassedHours = (val: number): BN => {
   return new BN(Math.floor(val / ONE_HOUR_MS));
 }
