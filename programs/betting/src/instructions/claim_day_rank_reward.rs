@@ -5,9 +5,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
-use mpl_token_metadata::{
-    ID as MetadataProgramId,
-};
+use mpl_token_metadata::ID as MetadataProgramId;
 
 #[derive(Accounts)]
 #[instruction(day: u64)]
@@ -87,7 +85,10 @@ impl<'info> ClaimDayRankReward<'info> {
 }
 
 #[access_control(ctx.accounts.validate())]
-pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankReward<'info>>, day: u64) -> Result<()> {
+pub fn handler<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankReward<'info>>,
+    day: u64,
+) -> Result<()> {
     let accts = ctx.accounts;
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
@@ -132,7 +133,7 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankRe
             accts.rent.to_account_info(),
             accts.global_state.treasury,
             ctx.program_id,
-            fragment_id
+            fragment_id,
         )?;
     }
 

@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 import { mintTo } from "@solana/spl-token";
@@ -179,4 +179,7 @@ describe("betting", () => {
     const tx = await returnBet(bettingAccounts, admin, cancelledArenaId);
   });
 
+  it("Parts to NFT", async () => {
+    const tx = await partsToNft(bettingAccounts, admin);
+  })
 });

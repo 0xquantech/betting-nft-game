@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{states::*};
+use crate::states::*;
 
 #[derive(Accounts)]
 pub struct GetHourRank<'info> {
@@ -16,7 +16,7 @@ pub fn handler(ctx: Context<GetHourRank>) -> Result<u8> {
         .iter()
         .position(|tier| accts.user_hour_state.bet_amount >= *tier)
         .unwrap_or(0);
-        
+
     // if not listed in winner-list, position is 0.
     // position will start from 1, 2, ...
     position = position + 1;

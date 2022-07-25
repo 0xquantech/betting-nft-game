@@ -3,14 +3,11 @@ use anchor_lang::prelude::*;
 use crate::{constants::*, error::*, instructions::*, states::*, utils::*};
 use anchor_spl::{
     associated_token::AssociatedToken,
-    token::{self, Mint, Token, TokenAccount, Transfer, MintTo},
+    token::{self, Mint, MintTo, Token, TokenAccount, Transfer},
 };
-use mpl_token_metadata::{
-    ID as MetadataProgramId,
-};
+use mpl_token_metadata::ID as MetadataProgramId;
 
 #[warn(unused_doc_comments)]
-
 #[derive(Accounts)]
 #[instruction(hour: u64)]
 pub struct ClaimHourRankReward<'info> {
@@ -76,7 +73,7 @@ impl<'info> ClaimHourRankReward<'info> {
         );
         Ok(())
     }
-    
+
     fn claim_reward_context(&self) -> CpiContext<'_, '_, '_, 'info, Transfer<'info>> {
         CpiContext::new(
             self.token_program.to_account_info(),
@@ -87,11 +84,13 @@ impl<'info> ClaimHourRankReward<'info> {
             },
         )
     }
-
 }
 
 #[access_control(ctx.accounts.validate())]
-pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>, hour: u64) -> Result<()> {
+pub fn handler<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>,
+    hour: u64,
+) -> Result<()> {
     let accts = ctx.accounts;
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
@@ -120,7 +119,7 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankR
     // 2. mintKey
     // 3. accountKey
     // 4. metadataKey
-    
+
     if position == 0 {
         let current_time = Clock::get()?.unix_timestamp as u64;
         let sel_rand_id = (current_time % 9) as usize;
@@ -140,11 +139,11 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankR
             accts.rent.to_account_info(),
             accts.global_state.treasury,
             ctx.program_id,
-            sel_rand_id
+            sel_rand_id,
         )?;
     }
 
     accts.user_hour_state.is_claimed = 1;
-    
+
     Ok(())
 }

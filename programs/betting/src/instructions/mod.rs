@@ -60,3 +60,9 @@ pub use return_bet::*;
 
 pub mod cancel_arena;
 pub use cancel_arena::*;
+
+pub mod open_bundle;
+pub use open_bundle::*;
+
+pub mod build_nft;
+pub use build_nft::*;

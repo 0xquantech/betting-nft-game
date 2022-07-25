@@ -75,6 +75,12 @@ pub mod betting {
         claim_referral_reward::handler(ctx)
     }
 
+    pub fn build_nft<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, BuildNft<'info>>
+    ) -> Result<()> {
+        build_nft::handler(ctx)
+    }
+
     pub fn init_hour_state(ctx: Context<InitHourState>, user_key: Pubkey, hour: u64) -> Result<()> {
         init_hour_state::handler(ctx, user_key, hour)
     }
@@ -87,7 +93,11 @@ pub mod betting {
         init_week_state::handler(ctx, user_key, week)
     }
 
-    pub fn init_eight_box_state(ctx: Context<InitEightBoxState>, user_key: Pubkey, box_id: u64) -> Result<()> {
+    pub fn init_eight_box_state(
+        ctx: Context<InitEightBoxState>,
+        user_key: Pubkey,
+        box_id: u64,
+    ) -> Result<()> {
         init_eight_box_state::handler(ctx, user_key, box_id)
     }
 
@@ -118,32 +128,50 @@ pub mod betting {
         end_week::handler(ctx, week, tiers, rewards)
     }
 
-    pub fn claim_eight_box<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimEightBox<'info>>, box_id: u64) -> Result<()> {
-        claim_eight_box::handler(ctx, box_id)
+    pub fn claim_eight_box<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ClaimEightBox<'info>>,
+        box_id: u64,
+        prize_id: u8,
+    ) -> Result<()> {
+        claim_eight_box::handler(ctx, box_id, prize_id)
     }
 
-    pub fn claim_hour_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>, hour: u64) -> Result<()> {
+    pub fn claim_hour_rank_reward<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ClaimHourRankReward<'info>>,
+        hour: u64,
+    ) -> Result<()> {
         claim_hour_rank_reward::handler(ctx, hour)
     }
 
-    pub fn claim_day_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankReward<'info>>, day: u64) -> Result<()> {
+    pub fn claim_day_rank_reward<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ClaimDayRankReward<'info>>,
+        day: u64,
+    ) -> Result<()> {
         claim_day_rank_reward::handler(ctx, day)
     }
 
-    pub fn claim_week_rank_reward<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>, week: u64) -> Result<()> {
+    pub fn claim_week_rank_reward<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>,
+        week: u64,
+    ) -> Result<()> {
         claim_week_rank_reward::handler(ctx, week)
+    }
+
+    pub fn open_bundle<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, OpenBundle<'info>>,
+    ) -> Result<()> {
+        open_bundle::handler(ctx)
     }
 
     pub fn get_hour_rank(ctx: Context<GetHourRank>) -> Result<u8> {
         get_hour_rank::handler(ctx)
     }
-    
+
     pub fn get_day_rank(ctx: Context<GetDayRank>) -> Result<u8> {
         get_day_rank::handler(ctx)
     }
-    
+
     pub fn get_week_rank(ctx: Context<GetWeekRank>) -> Result<u8> {
         get_week_rank::handler(ctx)
     }
-    
 }

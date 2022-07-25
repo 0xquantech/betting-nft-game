@@ -22,6 +22,9 @@ pub use day_state::*;
 pub mod week_state;
 pub use week_state::*;
 
+pub mod nft_build_state;
+pub use nft_build_state::*;
+
 pub mod hour_result;
 pub use hour_result::*;
 

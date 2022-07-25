@@ -3,7 +3,7 @@ use anchor_lang::prelude::*;
 use crate::{constants::*, error::*, states::*};
 
 use anchor_spl::{
-    associated_token::{AssociatedToken},
+    associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
 

@@ -1,4 +1,3 @@
-
 use anchor_lang::prelude::*;
 
 #[account]
@@ -7,5 +6,5 @@ pub struct EightBoxState {
     pub user: Pubkey,
     pub start_time: u64,
     pub bet_amount: u64,
-    pub is_claimed: u8,
+    pub claimed_status: u8,
 }

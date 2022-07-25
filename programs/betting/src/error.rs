@@ -41,6 +41,9 @@ pub enum BettingError {
     #[msg("Incorrect Referrer Hash")]
     InvalidReferrerHash,
 
+    #[msg("Incorrect 8 Hour Box")]
+    Incorrect8Hour,
+
     #[msg("Incorrect Hour")]
     IncorrectHour,
 
@@ -58,6 +61,18 @@ pub enum BettingError {
 
     #[msg("Reduce is not accepted by client or freelancer")]
     ReduceNotAccepted,
+
+    #[msg("Incorrect Metadata")]
+    IncorrectMetadata,
+
+    #[msg("Token Account is empty")]
+    EmptyAccount,
+
+    #[msg("This fragment is already burnt")]
+    FragmentAlreadyBurnt,
+    
+    #[msg("Not ready to build NFT")]
+    NotReadyToBuildNFT,
 
     #[msg("This action is not expected.")]
     UnexpectedAction,

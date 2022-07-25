@@ -792,6 +792,99 @@ export const claimWeekRankReward = async (
   );
 };
 
+
+export const openBundle = async (
+  accts: BettingAccounts, 
+  user: User,
+) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  let transaction = new Transaction();
+  let remainingAccounts: AccountMeta[] = [];
+  let signers = [];
+  let instructions = [];
+  /*if (rank == 1) {
+    await prepareMintNft(user, remainingAccounts, instructions, signers);
+    transaction.add(...instructions);
+  } else if (rank == 2) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers, 3);
+    transaction.add(...instructions);
+  } else if (rank == 3) {
+    await prepareMintFragment(user, remainingAccounts, instructions, signers, 1);
+    transaction.add(...instructions);
+  }*/
+
+  let bundleMint = new PublicKey("");
+
+  let bundleMinterKey = await keys.getBundleMinterKey();
+  let userBundleAta = await getAssociatedTokenAddress(
+    bundleMint,
+    user.publicKey
+  );
+  transaction.add(await program.methods
+    .openBundle()
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      bundleCreator: bundleMinterKey,
+      userBundleAta,
+      bundleMint,
+      //bundleMetadata,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .remainingAccounts([...remainingAccounts])
+    .signers([user.keypair])
+    .instruction()
+  );  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
+  );
+};
+
+export const partsToNft = async (
+  accts: BettingAccounts, 
+  user: User,
+) => {
+  let week = getPassedWeeks(Date.now());
+  
+  const globalStateKey = await keys.getGlobalStateKey();
+
+  let transaction = new Transaction();
+  let remainingAccounts: AccountMeta[] = [];
+  let signers = [];
+  let instructions = [];
+
+  await prepareMintFragment(user, remainingAccounts, instructions, signers, 9);
+
+  transaction.add(await program.methods
+    .buildNft()
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      //tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .remainingAccounts([...remainingAccounts])
+    .signers([user.keypair])
+    .instruction()
+  );  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair],
+    connection,
+    false
+  );
+};
+
+
 export const fetchData = async (type: string, key: PublicKey) => {
   return await program.account[type].fetchNullable(key);
 };

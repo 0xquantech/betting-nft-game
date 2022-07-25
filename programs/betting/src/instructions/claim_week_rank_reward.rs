@@ -5,9 +5,7 @@ use anchor_spl::{
     associated_token::AssociatedToken,
     token::{self, Mint, Token, TokenAccount, Transfer},
 };
-use mpl_token_metadata::{
-    ID as MetadataProgramId,
-};
+use mpl_token_metadata::ID as MetadataProgramId;
 #[derive(Accounts)]
 #[instruction(week: u64)]
 pub struct ClaimWeekRankReward<'info> {
@@ -86,7 +84,10 @@ impl<'info> ClaimWeekRankReward<'info> {
 }
 
 #[access_control(ctx.accounts.validate())]
-pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>, week: u64) -> Result<()> {
+pub fn handler<'a, 'b, 'c, 'info>(
+    ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankReward<'info>>,
+    week: u64,
+) -> Result<()> {
     let accts = ctx.accounts;
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
@@ -124,11 +125,10 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankR
             accts.system_program.to_account_info(),
             accts.rent.to_account_info(),
             accts.global_state.treasury,
-            ctx.program_id
+            ctx.program_id,
         )?;
     }
     if position == 1 {
-        
         let fragment_minter = next_account_info(rem_accts)?;
 
         for i in 0..3 {
@@ -149,7 +149,7 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankR
                 accts.rent.to_account_info(),
                 accts.global_state.treasury,
                 ctx.program_id,
-                fragment_id
+                fragment_id,
             )?;
         }
     }
@@ -172,7 +172,7 @@ pub fn handler<'a, 'b, 'c, 'info>(ctx: Context<'a, 'b, 'c, 'info, ClaimWeekRankR
             accts.rent.to_account_info(),
             accts.global_state.treasury,
             ctx.program_id,
-            fragment_id
+            fragment_id,
         )?;
     }
     accts.user_week_state.is_claimed = 1;
