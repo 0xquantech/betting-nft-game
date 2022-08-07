@@ -25,23 +25,26 @@ pub struct BuildNft<'info> {
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
-    #[account(
+   /* #[account(
         mut,
         seeds = [NFT_BUILD_STATE_SEED],
         bump,
         close = user
     )]
     pub nft_build_state: Box<Account<'info, NftBuildState>>,
-    
+    */
     #[account(
+        mut,
         seeds = [NFT_MINTER_SEED],
         bump
     )]
     /// CHECK: safe
     pub nft_creator: AccountInfo<'info>,
 
+    #[account(mut)]
     pub nft_mint: Box<Account<'info, Mint>>,
   
+    #[account(mut)]
     /// CHECK: safe
     pub nft_metadata: AccountInfo<'info>,
     
@@ -61,10 +64,10 @@ pub struct BuildNft<'info> {
 
 impl<'info> BuildNft<'info> {
     fn validate(&self) -> Result<()> {
-        require!(self.nft_build_state.build_state 
+       /* require!(self.nft_build_state.build_state 
             & 0b111111111 == self.nft_build_state.build_state,
             BettingError::NotReadyToBuildNFT
-        );
+        );*/
         Ok(())
     }
 }
@@ -73,9 +76,29 @@ impl<'info> BuildNft<'info> {
 pub fn handler<'a, 'b, 'c, 'info>(
     ctx: Context<'a, 'b, 'c, 'info, BuildNft<'info>>,
 ) -> Result<()> {
-    let current_time = Clock::get()?.unix_timestamp as u64;
-    
     let accts = ctx.accounts;
+
+    let iter = &mut ctx.remaining_accounts.iter();
+    for i in 1..=9 {
+
+        let fragment_mint = next_account_info(iter)?;
+        let fragment_ata = next_account_info(iter)?;
+        let (mint_key, _) = Pubkey::find_program_address(&[fragment_seed(i).as_str().as_ref()], &crate::ID);
+        require!(mint_key.eq(&fragment_mint.key()), BettingError::IncorrectMint);
+
+        token::burn(
+            CpiContext::new(
+                accts.token_program.to_account_info(),
+                Burn {
+                    mint: fragment_mint.to_account_info(),
+                    from: fragment_ata.to_account_info(),
+                    authority: accts.user.to_account_info(),
+                },
+            ),
+            1,
+        );
+    }
+    
     mint_nft(
         accts.nft_mint.to_account_info(),
         accts.user_nft_ata.to_account_info(),

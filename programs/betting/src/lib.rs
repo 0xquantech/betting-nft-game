@@ -157,10 +157,42 @@ pub mod betting {
         claim_week_rank_reward::handler(ctx, week)
     }
 
+    pub fn mint_fragment<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, MintFragment<'info>>,
+        fragment_no: u8
+    ) -> Result<()> {
+        mint_fragment::handler(ctx, fragment_no)
+    }
+
     pub fn open_bundle<'a, 'b, 'c, 'info>(
         ctx: Context<'a, 'b, 'c, 'info, OpenBundle<'info>>,
     ) -> Result<()> {
         open_bundle::handler(ctx)
+    }
+
+    pub fn buy_bundle<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, BuyBundle<'info>>,
+        bundle_id: u8
+    ) -> Result<()> {
+        buy_bundle::handler(ctx, bundle_id)
+    }
+
+    pub fn burn_fragment<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, BurnFragment<'info>>,
+    ) -> Result<()> {
+        burn_fragment::handler(ctx)
+    }
+
+    pub fn init_nft_build<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, InitNftBuild<'info>>,
+    ) -> Result<()> {
+        init_nft_build::handler(ctx)
+    }
+
+    pub fn create_fragment_mints<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, CreateFragmentMints<'info>>,
+    ) -> Result<()> {
+        create_fragment_mints::handler(ctx)
     }
 
     pub fn get_hour_rank(ctx: Context<GetHourRank>) -> Result<u8> {
@@ -174,4 +206,5 @@ pub mod betting {
     pub fn get_week_rank(ctx: Context<GetWeekRank>) -> Result<u8> {
         get_week_rank::handler(ctx)
     }
+    
 }

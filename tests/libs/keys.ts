@@ -15,7 +15,8 @@ import {
   NFT_MINTER_SEED,
   BUNDLE_MINTER_SEED,
   EIGHT_BOX_STATE_SEED,
-  MetadataProgramId
+  MetadataProgramId,
+  NFT_BUILD_STATE_SEED
 } from "./constants";
 import { asyncGetPda } from "./utils";
 import { getProgram } from "../program";
@@ -80,6 +81,15 @@ export const getUserWeekStateKey = async (userKey: PublicKey, week: BN) => {
   return key;
 };
 
+export const getUserNftBuildStateKey = async (userKey: PublicKey) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from(NFT_BUILD_STATE_SEED), userKey.toBuffer()],
+    program.programId
+  );
+  return key;
+};
+
+
 export const getEightBoxStateKey = async (userKey: PublicKey, box_id: BN) => {
   const [key] = await asyncGetPda(
     [Buffer.from(EIGHT_BOX_STATE_SEED), userKey.toBuffer(), box_id.toArrayLike(Buffer, "le", 8)],
@@ -112,6 +122,15 @@ export const getWeekResultKey = async (week: BN) => {
   );
   return key;
 };
+
+export const getFragmentMintKey = async (fragment_no: number) => {
+  const [key] = await asyncGetPda(
+    [Buffer.from("FRAGMENT" + fragment_no)],
+    program.programId
+  );
+  return key;
+};
+
 
 export const getFragmentMinterKey = async () => {
   const [key] = await asyncGetPda(

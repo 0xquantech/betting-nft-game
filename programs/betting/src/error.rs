@@ -65,6 +65,9 @@ pub enum BettingError {
     #[msg("Incorrect Metadata")]
     IncorrectMetadata,
 
+    #[msg("Incorrect Mint")]
+    IncorrectMint,
+
     #[msg("Token Account is empty")]
     EmptyAccount,
 

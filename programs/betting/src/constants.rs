@@ -96,3 +96,8 @@ pub const BUNDLE_FRAGMENT_RATE: [[u32; 9]; 6] = [
 ];
 
 pub const BUNDLE_REWARD_COUNT: [u8; 6] = [1, 3, 3, 5, 5, 2];
+
+pub const BUNDLE_COST: [u64; 6] = [
+    1250, 2500, 5000, 10000, 17500, 25000
+];
+pub const BURNRATE_TOBUY_BUNDLE: u64 = 20;

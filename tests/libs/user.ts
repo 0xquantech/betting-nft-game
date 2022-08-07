@@ -25,6 +25,7 @@ export class User {
   publicKey: PublicKey;
   keypair: Keypair;
   bettingMintAta: PublicKey;
+  feelAta: PublicKey;
   userStateKey: PublicKey;
   userVaultAta: PublicKey;
   constructor() {
@@ -49,6 +50,20 @@ export class User {
       this.keypair,
       accts.bettingMint,
       this.bettingMintAta,
+      accts.payerAndAuth,
+      100_000_000_000
+    );
+    this.feelAta = await createAssociatedTokenAccount(
+      connection,
+      this.keypair,
+      accts.rankMint,
+      this.keypair.publicKey
+    );
+    await mintTo(
+      connection,
+      this.keypair,
+      accts.rankMint,
+      this.feelAta,
       accts.payerAndAuth,
       100_000_000_000
     );

@@ -39,6 +39,7 @@ pub struct OpenBundle<'info> {
     )]
     pub user_bundle_ata: Box<Account<'info, TokenAccount>>,
 
+    #[account(mut)]
     pub bundle_mint: Box<Account<'info, Mint>>,
 
     #[account(owner = MetadataProgramID)]
@@ -113,30 +114,32 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .position(|&name| name.to_string().eq(&bundle_name))
         .unwrap_or(0);
 
+    msg!("bundle id {}", bundle_id);
     let fragment_minter = next_account_info(rem_accts)?;
     for i in 0..BUNDLE_REWARD_COUNT[bundle_id] {
         let rand_val = current_time % 1001;
-        let fragment_id = BUNDLE_FRAGMENT_RATE[bundle_id as usize]
+        let fragment_no = BUNDLE_FRAGMENT_RATE[bundle_id as usize]
             .iter()
             .position(|&rate| rand_val <= rate as u64)
             .unwrap_or(0);
-        let fragment_mint = next_account_info(rem_accts)?;
-        let fragment_ata = next_account_info(rem_accts)?;
-        let fragment_metadata = next_account_info(rem_accts)?;
+
+        let iter = &mut ctx.remaining_accounts.iter();
+        
+        let mut fragment_mint = next_account_info(iter)?;
+        let mut fragment_ata = next_account_info(iter)?;
+        for i in 0..fragment_no {
+            fragment_mint = next_account_info(iter)?;
+            fragment_ata = next_account_info(iter)?;
+        }
 
         mint_fragment(
             fragment_mint.to_account_info(),
             fragment_ata.to_account_info(),
-            fragment_metadata.to_account_info(),
-            fragment_minter.to_account_info(),
-            accts.user.to_account_info(),
-            accts.token_metadata_program.to_account_info(),
+            accts.global_state.to_account_info(),
+            *ctx.bumps.get("global_state").unwrap(),
             accts.token_program.to_account_info(),
-            accts.system_program.to_account_info(),
-            accts.rent.to_account_info(),
-            accts.global_state.treasury,
             ctx.program_id,
-            fragment_id,
+            fragment_no as u8 + 1,
         )?;
     }
 
@@ -151,6 +154,6 @@ pub fn handler<'a, 'b, 'c, 'info>(
         ),
         1,
     )?;
-
+    
     Ok(())
 }

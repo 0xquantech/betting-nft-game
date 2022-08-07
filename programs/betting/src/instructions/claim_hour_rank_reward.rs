@@ -123,23 +123,22 @@ pub fn handler<'a, 'b, 'c, 'info>(
     if position == 0 {
         let current_time = Clock::get()?.unix_timestamp as u64;
         let sel_rand_id = (current_time % 9) as usize;
-        let fragment_minter = next_account_info(rem_accts)?;
-        let fragment_mint = next_account_info(rem_accts)?;
-        let fragment_ata = next_account_info(rem_accts)?;
-        let fragment_metadata = next_account_info(rem_accts)?;
+            
+        let mut fragment_mint = next_account_info(rem_accts)?;
+        let mut fragment_ata = next_account_info(rem_accts)?;
+        for i in 0..sel_rand_id {    
+            fragment_mint = next_account_info(rem_accts)?;
+            fragment_ata = next_account_info(rem_accts)?;
+        }
+
         mint_fragment(
             fragment_mint.to_account_info(),
             fragment_ata.to_account_info(),
-            fragment_metadata.to_account_info(),
-            fragment_minter.to_account_info(),
-            accts.user.to_account_info(),
-            accts.token_metadata_program.to_account_info(),
+            accts.global_state.to_account_info(),
+            *ctx.bumps.get("global_state").unwrap(),
             accts.token_program.to_account_info(),
-            accts.system_program.to_account_info(),
-            accts.rent.to_account_info(),
-            accts.global_state.treasury,
             ctx.program_id,
-            sel_rand_id,
+            sel_rand_id as u8 + 1,
         )?;
     }
 

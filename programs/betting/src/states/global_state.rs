@@ -7,8 +7,8 @@ pub struct GlobalState {
     pub authority: Pubkey,
     pub treasury: Pubkey,
     pub pyth_account: Pubkey,
-    pub token_mint: Pubkey,
-    pub rank_mint: Pubkey,
+    pub token_mint: Pubkey, // usdc
+    pub rank_mint: Pubkey,  // feel
     pub arena_duration: u64,
     pub platform_fee_rate: u64,
     pub referral_fee_rate: u64,

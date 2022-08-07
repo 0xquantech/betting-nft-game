@@ -152,3 +152,39 @@ export const getPassedDays = (val: number): BN => {
 export const getPassedWeeks = (val: number): BN => {
   return new BN(Math.floor(val / ONE_WEEK_MS));
 }
+
+
+export function getTransactionSize(
+  transaction: Transaction,
+  signers: any = [],
+  hasWallet: boolean = true
+) {
+  const signData = transaction.serializeMessage();
+  const signatureCount: number[] = [];
+  encodeLength(signatureCount, signers.length);
+
+  // console.log("signatureCount.length =", signatureCount.length);
+  // console.log("signData.length =", signData.length);
+  // console.log("signers.length =", signers.length);
+  
+  const transactionLength =
+    signatureCount.length +
+    (signers.length + (hasWallet ? 1 : 0)) * 64 +
+    signData.length;
+  return transactionLength;
+}
+
+function encodeLength(bytes: Array<number>, len: number) {
+  let rem_len = len;
+  for (;;) {
+    let elem = rem_len & 0x7f;
+    rem_len >>= 7;
+    if (rem_len == 0) {
+      bytes.push(elem);
+      break;
+    } else {
+      elem |= 0x80;
+      bytes.push(elem);
+    }
+  }
+}

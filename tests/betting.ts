@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 import { mintTo } from "@solana/spl-token";
@@ -36,6 +36,8 @@ describe("betting", () => {
   const arenaId = 1;
   const cancelledArenaId = 2;
 
+  let bundle0_mint = null;
+  let bundle4_mint = null;
   it("setup", async () => {
     await bettingAccounts.init(provider.connection);
     await admin.init(provider.connection, bettingAccounts);
@@ -65,6 +67,10 @@ describe("betting", () => {
     );
   });
 
+  it("Initialize Fragment Mints", async () => {
+    await createFragmentMints(bettingAccounts, admin);
+  })
+
   it("Open Arena", async () => {
     const tx = await openArena(bettingAccounts, admin, arenaId);
   })
@@ -77,7 +83,7 @@ describe("betting", () => {
     const tx = await userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */);
   });
   
-  it("FAIL: UserB double bet", async () => {
+  xit("FAIL: UserB double bet", async () => {
     await expect(
         userBet(bettingAccounts, userB, userD.publicKey, arenaId, 2000, true /** up */)
     ).is.rejected;
@@ -87,7 +93,7 @@ describe("betting", () => {
     const tx = await userBet(bettingAccounts, userC, userD.publicKey, arenaId, 1500, false /** down */);
   });
 
-  it("Remaining users Bet to random with random amount", async () => {
+  xit("Remaining users Bet to random with random amount", async () => {
     for (let i = 0; i < remainingUsers.length; i ++) {
       await userBet(bettingAccounts,
         remainingUsers[i],
@@ -107,37 +113,37 @@ describe("betting", () => {
     const tx = await endArena(bettingAccounts, admin, arenaId);
   });
 
-  it("FAIL: UserD Bet to Down, 1500 USDC", async () => {
+  xit("FAIL: UserD Bet to Down, 1500 USDC", async () => {
     await expect(
       userBet(bettingAccounts, userD, admin.publicKey, arenaId, 1500, false /** down */)
     ).is.rejected;
   });
 
-  it("UserA claim Reward", async () => {
+  xit("UserA claim Reward", async () => {
     const tx = await claimReward(bettingAccounts, userA, userD, arenaId);
   })
 
-  it("UserC claim Reward", async () => {
+  xit("UserC claim Reward", async () => {
     const tx = await claimReward(bettingAccounts, userC, userD, arenaId);
   })
   
-  it("End Hour", async () => {
+  xit("End Hour", async () => {
     await endHour(bettingAccounts, admin);
   });
 
-  it("End Day", async () => {
+  xit("End Day", async () => {
     await endDay(bettingAccounts, admin);
   });
 
-  it("End Week", async () => {
+  xit("End Week", async () => {
     await endWeek(bettingAccounts, admin);
   });
 
-  it("Claim hour rank reward", async () => {
+  xit("Claim hour rank reward", async () => {
     await claimHourRankReward(bettingAccounts, userA);
   });
 
-  it("Claim day rank reward", async () => {
+  xit("Claim day rank reward", async () => {
     await claimDayRankReward(bettingAccounts, userA);
   });
 
@@ -145,41 +151,54 @@ describe("betting", () => {
     await claimWeekRankReward(bettingAccounts, userA);
   });
 
-  it("Claim Ref reward", async () => {
+  xit("Claim Ref reward", async () => {
     await claimRefReward(bettingAccounts, userD);
   })
 
-  it("Open Arena", async () => {
+  xit("Open Arena", async () => {
     const tx = await openArena(bettingAccounts, admin, cancelledArenaId);
   })
 
-  it("UserA Bet to Up, 1000 USDC", async () => {
+  xit("UserA Bet to Up, 1000 USDC", async () => {
     const tx = await userBet(bettingAccounts, userA, userD.publicKey, cancelledArenaId, 1000, true /** up */);
   });
 
-  it("UserB Bet to Up, 2000 USDC", async () => {
+  xit("UserB Bet to Up, 2000 USDC", async () => {
     const tx = await userBet(bettingAccounts, userB, userD.publicKey, cancelledArenaId, 2000, true /** up */);
   });
 
-  it("Start Arena", async () => {
+  xit("Start Arena", async () => {
     const tx = await startArena(bettingAccounts, admin, cancelledArenaId);
   });
 
-  it("Cancel Arena", async () => {
+  xit("Cancel Arena", async () => {
     const tx = await cancelArena(bettingAccounts, admin, cancelledArenaId);
   });
 
-  it("FAIL: UserA claim Reward: can't claim in cancelled arena", async () => {
+  xit("FAIL: UserA claim Reward: can't claim in cancelled arena", async () => {
     await expect(
       claimReward(bettingAccounts, userA, userD, cancelledArenaId)
     ).is.rejected;
   });
   
-  it("Return Bet", async () => {
+  xit("Return Bet", async () => {
     const tx = await returnBet(bettingAccounts, admin, cancelledArenaId);
   });
 
-  it("Parts to NFT", async () => {
-    const tx = await partsToNft(bettingAccounts, admin);
+  it("UserA buys bundles", async () => {
+    bundle0_mint = await buyBundle(bettingAccounts, userA, 0);
+    bundle4_mint = await buyBundle(bettingAccounts, userA, 5);
   })
+
+  it("UserA open bundle", async () => {
+    await openBundle(bettingAccounts, userA, bundle0_mint);
+  })
+
+  it("UserA mints Fragment and burn", async () => {
+    for (let i = 1; i <= 9; i ++) 
+      await mintFragment(bettingAccounts, userA, i);
+
+    const tx = await buildNFT(bettingAccounts, admin);
+  })
+
 });

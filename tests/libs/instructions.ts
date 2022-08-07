@@ -19,6 +19,7 @@ import {
   MINT_SIZE
 } from "@solana/spl-token";
 
+import { Metadata } from '@metaplex-foundation/mpl-token-metadata'
 import bs58 from 'bs58';
 import crypto from 'crypto';
 import * as anchor from "@project-serum/anchor";
@@ -30,7 +31,7 @@ import * as keys from "./keys";
 import { User } from "./user";
 import { BettingAccounts } from "./accounts";
 import { assert } from "chai";
-import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks, getEightBoxId } from "./utils";
+import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks, getEightBoxId, getTransactionSize } from "./utils";
 
 const program = anchor.workspace.Betting as anchor.Program<Betting>;
 const connection = program.provider.connection;
@@ -64,6 +65,40 @@ export const initializeProgram = async (accts: BettingAccounts, admin: User) => 
     connection
   );
 };
+
+
+export const createFragmentMints = async (accts: BettingAccounts, admin: User) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  const fragmentMintKeys: Array<PublicKey> = [];
+  for (let i = 1; i <= 9; i ++) fragmentMintKeys.push(await keys.getFragmentMintKey(i));
+  let transaction = new Transaction().add(await program.methods
+    .createFragmentMints()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: globalStateKey,
+      fragment1Mint: fragmentMintKeys[0],
+      fragment2Mint: fragmentMintKeys[1],
+      fragment3Mint: fragmentMintKeys[2],
+      fragment4Mint: fragmentMintKeys[3],
+      fragment5Mint: fragmentMintKeys[4],
+      fragment6Mint: fragmentMintKeys[5],
+      fragment7Mint: fragmentMintKeys[6],
+      fragment8Mint: fragmentMintKeys[7],
+      fragment9Mint: fragmentMintKeys[8],
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction()
+  );
+  transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+  transaction.feePayer = admin.publicKey;
+  let val = getTransactionSize(transaction);
+  console.log("createFragmentMints txSize =", val);
+  sendAndConfirmTransaction(connection, transaction, [admin.keypair]);
+};
+
 
 export const openArena = async (accts: BettingAccounts, admin: User, arenaId: number) => {
   await sendOrSimulateTransaction(await program.methods
@@ -788,38 +823,187 @@ export const claimWeekRankReward = async (
     transaction,
     [user.keypair, ...signers],
     connection,
-    false
+    true
   );
 };
 
 
+export const burnFragments = async (
+  accts: BettingAccounts, 
+  user: User, 
+  fragmentsList: PublicKey[]
+) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  const nftBuildStateKey = await keys.getUserNftBuildStateKey(user.publicKey);
+
+  let transaction = new Transaction();
+  await initNftBuildState(accts, user);
+  await Promise.all(fragmentsList.map(async mint => {
+    let metadata = await keys.getMetadataKey(mint);
+    let fragmentAta = await getAssociatedTokenAddress(
+      mint,
+      user.publicKey
+    );
+    transaction.add(await program.methods
+      .burnFragment()
+      .accounts({
+        user: user.publicKey,
+       // globalState: globalStateKey,
+        nftBuildState: nftBuildStateKey,
+        fragmentMint: mint,
+        fragmentMetadata: metadata,
+        userFragmentAta: fragmentAta,
+        tokenProgram: TOKEN_PROGRAM_ID
+      })
+      .signers([user.keypair])
+      .instruction()
+    );
+  }))
+  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair],
+    connection,
+    false
+  );
+};
+
+export const initNftBuildState = async (
+  accts: BettingAccounts, 
+  user: User
+) => {
+  const nftBuildStateKey = await keys.getUserNftBuildStateKey(user.publicKey);
+
+  let transaction = new Transaction();
+  transaction.add(await program.methods
+    .initNftBuild()
+    .accounts({
+      user: user.publicKey,
+     // globalState: globalStateKey,
+      nftBuildState: nftBuildStateKey,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY
+    })
+    .signers([user.keypair])
+    .instruction()
+  );
+  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair],
+    connection,
+    false
+  );
+};
+
+export const buyBundle = async (accts: BettingAccounts, user: User, bundleId: number) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  const feelVaultAta = await getAssociatedTokenAddress(
+    accts.rankMint,
+    globalStateKey,
+    true
+  );
+  
+  const userFeelAta = await getAssociatedTokenAddress(
+    accts.rankMint,
+    user.publicKey
+  );
+  console.log("feelAmount = ", (await connection.getTokenAccountBalance(userFeelAta)).value.uiAmount);
+  const bundleCreator = await keys.getBundleMinterKey();
+  let signers = [];
+  let instructions = [];
+  let bundleData = await prepareMintBundle(user, instructions, signers);
+  
+  let transaction = new Transaction();
+  transaction.add(...instructions);
+  transaction.add(await program.methods
+    .buyBundle(bundleId)
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      bundleCreator,
+      bundleMint: bundleData.bundleMint,
+      bundleMetadata: bundleData.bundleMeta,
+      userBundleAta: bundleData.bundleAta,
+      feelVaultAta,
+      userFeelAta,
+      feelMint: accts.rankMint,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair])
+    .instruction()
+  );
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
+  );
+  return bundleData.bundleMint;
+};
+export const mintFragment = async (
+  accts: BettingAccounts, 
+  user: User,
+  fragmentNo: number
+) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  let transaction = new Transaction();
+  
+  let mintKey = await keys.getFragmentMintKey(fragmentNo);
+  let ataKey = await getAssociatedTokenAddress(mintKey, user.publicKey);
+  transaction.add(await program.methods
+    .mintFragment(fragmentNo)
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      mint: mintKey,
+      userAta: ataKey,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair])
+    .instruction()
+  );  
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair],
+    connection,
+    false
+  );
+};
+
 export const openBundle = async (
   accts: BettingAccounts, 
   user: User,
+  bundleMint: PublicKey
 ) => {
   const globalStateKey = await keys.getGlobalStateKey();
   let transaction = new Transaction();
   let remainingAccounts: AccountMeta[] = [];
   let signers = [];
   let instructions = [];
-  /*if (rank == 1) {
-    await prepareMintNft(user, remainingAccounts, instructions, signers);
-    transaction.add(...instructions);
-  } else if (rank == 2) {
-    await prepareMintFragment(user, remainingAccounts, instructions, signers, 3);
-    transaction.add(...instructions);
-  } else if (rank == 3) {
-    await prepareMintFragment(user, remainingAccounts, instructions, signers, 1);
-    transaction.add(...instructions);
-  }*/
-
-  let bundleMint = new PublicKey("");
 
   let bundleMinterKey = await keys.getBundleMinterKey();
+  let bundleMetaKey = await keys.getMetadataKey(bundleMint);
+  let metadata_info = Metadata.fromAccountInfo(await connection.getAccountInfo(bundleMetaKey))[0];
+  let bundle_id = parseInt(metadata_info.data.name.slice(7, 8));
+
+ console.log("bundleId =", bundle_id);
+ console.log("metadata_info.data.name =", metadata_info.data.name);
+  
+  await prepareMintFragment(user, remainingAccounts, instructions,
+     signers, Constants.BUNDLE_REWARD_COUNT[bundle_id - 1]);
+  
   let userBundleAta = await getAssociatedTokenAddress(
     bundleMint,
     user.publicKey
   );
+  if (instructions.length > 0) transaction.add(...instructions);
   transaction.add(await program.methods
     .openBundle()
     .accounts({
@@ -828,9 +1012,62 @@ export const openBundle = async (
       bundleCreator: bundleMinterKey,
       userBundleAta,
       bundleMint,
-      //bundleMetadata,
+      bundleMetadata: bundleMetaKey,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .remainingAccounts([...remainingAccounts])
+    .signers([user.keypair])
+    .instruction()
+  );  
+  
+  console.log("transactions = ", transaction);
+
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
+  );
+};
+
+export const buildNFT = async (
+  accts: BettingAccounts, 
+  user: User,
+) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+
+  let transaction = new Transaction();
+  let remainingAccounts: AccountMeta[] = [];
+
+  for (let i = 1; i <= 9; i ++) {
+    let mint = await keys.getFragmentMintKey(i);
+    let fragmentAta = await getAssociatedTokenAddress(
+      mint,
+      user.publicKey
+    );
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: mint } as AccountMeta);
+    remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: fragmentAta } as AccountMeta);
+  }
+
+  let instructions = [];
+  let signers = [];
+  let tempRemainingAccounts: AccountMeta[] = [];
+  await prepareMintNft(user, tempRemainingAccounts, instructions, signers);
+  transaction.add(...instructions);
+  transaction.add(await program.methods
+    .buildNft()
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      nftCreator: tempRemainingAccounts[0].pubkey,
+      nftMint: tempRemainingAccounts[1].pubkey,
+      userNftAta: tempRemainingAccounts[2].pubkey,
+      nftMetadata: tempRemainingAccounts[3].pubkey,
+      tokenProgram: TOKEN_PROGRAM_ID,
       tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
@@ -842,43 +1079,6 @@ export const openBundle = async (
   await sendOrSimulateTransaction(
     transaction,
     [user.keypair, ...signers],
-    connection,
-    false
-  );
-};
-
-export const partsToNft = async (
-  accts: BettingAccounts, 
-  user: User,
-) => {
-  let week = getPassedWeeks(Date.now());
-  
-  const globalStateKey = await keys.getGlobalStateKey();
-
-  let transaction = new Transaction();
-  let remainingAccounts: AccountMeta[] = [];
-  let signers = [];
-  let instructions = [];
-
-  await prepareMintFragment(user, remainingAccounts, instructions, signers, 9);
-
-  transaction.add(await program.methods
-    .buildNft()
-    .accounts({
-      user: user.publicKey,
-      globalState: globalStateKey,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      //tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
-      systemProgram: SystemProgram.programId,
-      rent: SYSVAR_RENT_PUBKEY,
-    })
-    .remainingAccounts([...remainingAccounts])
-    .signers([user.keypair])
-    .instruction()
-  );  
-  await sendOrSimulateTransaction(
-    transaction,
-    [user.keypair],
     connection,
     false
   );
@@ -1028,4 +1228,48 @@ export const prepareMintNft = async (
     let metadataKey = await keys.getMetadataKey(newNftMint.publicKey);
     remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: metadataKey });
   }
+}
+
+export const prepareMintBundle = async (
+  wallet: any,
+  instructions: TransactionInstruction[],
+  signers: Signer[],
+) => {
+  let bundleMinter = await keys.getBundleMinterKey();
+    let newNftMint = Keypair.generate();
+    signers.push(newNftMint);
+
+    instructions.push(SystemProgram.createAccount({
+      fromPubkey: wallet.publicKey,
+      newAccountPubkey: newNftMint.publicKey,
+      space: MINT_SIZE,
+      lamports: await connection.getMinimumBalanceForRentExemption(MINT_SIZE),
+      programId: TOKEN_PROGRAM_ID,
+    }));
+
+    instructions.push(createInitializeMintInstruction(
+      newNftMint.publicKey,
+      0,
+      bundleMinter,
+      null
+    ));
+
+    let associatedAcc = await getAssociatedTokenAddress(
+      newNftMint.publicKey,
+      wallet.publicKey
+    );
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        wallet.publicKey,
+        associatedAcc,
+        wallet.publicKey,
+        newNftMint.publicKey
+      )
+    )
+    let metadataKey = await keys.getMetadataKey(newNftMint.publicKey);
+    return {
+      bundleMint: newNftMint.publicKey,
+      bundleAta: associatedAcc,
+      bundleMeta: metadataKey
+    }
 }
