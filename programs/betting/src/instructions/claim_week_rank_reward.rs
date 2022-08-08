@@ -114,10 +114,12 @@ pub fn handler<'a, 'b, 'c, 'info>(
         let nft_mint = next_account_info(rem_accts)?;
         let nft_ata = next_account_info(rem_accts)?;
         let nft_metadata = next_account_info(rem_accts)?;
+        let edition = next_account_info(rem_accts)?;
         mint_nft(
             nft_mint.to_account_info(),
             nft_ata.to_account_info(),
             nft_metadata.to_account_info(),
+            edition.to_account_info(),
             nft_minter.to_account_info(),
             accts.user.to_account_info(),
             accts.token_metadata_program.to_account_info(),
@@ -141,11 +143,15 @@ pub fn handler<'a, 'b, 'c, 'info>(
             }
 
             mint_fragment(
+                accts.user.to_account_info(),
                 fragment_mint.to_account_info(),
                 fragment_ata.to_account_info(),
                 accts.global_state.to_account_info(),
                 *ctx.bumps.get("global_state").unwrap(),
                 accts.token_program.to_account_info(),
+                accts.associated_token_program.to_account_info(),
+                accts.system_program.to_account_info(),
+                accts.rent.to_account_info(),
                 ctx.program_id,
                 fragment_no as u8 + 1,
             )?;

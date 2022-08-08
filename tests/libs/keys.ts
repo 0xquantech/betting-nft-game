@@ -170,3 +170,17 @@ export async function getMetadataKey(
     )
   )[0];
 }
+
+export async function getEditionKey(
+  tokenMint: PublicKey
+): Promise<PublicKey> {
+  return (await PublicKey.findProgramAddress(
+    [
+      Buffer.from("metadata"),
+      new PublicKey(MetadataProgramId).toBuffer(),
+      new PublicKey(tokenMint).toBuffer(),
+      Buffer.from("edition"),
+    ],
+    new PublicKey(MetadataProgramId)
+  ))[0];
+}

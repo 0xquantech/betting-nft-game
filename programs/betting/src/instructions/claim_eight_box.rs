@@ -83,10 +83,12 @@ pub fn handler<'a, 'b, 'c, 'info>(
             let bundle_mint = next_account_info(rem_accts)?;
             let bundle_ata = next_account_info(rem_accts)?;
             let bundle_metadata = next_account_info(rem_accts)?;
+            let bundle_edition = next_account_info(rem_accts)?;
             mint_bundle(
                 bundle_mint.to_account_info(),
                 bundle_ata.to_account_info(),
                 bundle_metadata.to_account_info(),
+                bundle_edition.to_account_info(),
                 bundle_minter.to_account_info(),
                 accts.user.to_account_info(),
                 accts.token_metadata_program.to_account_info(),
@@ -105,15 +107,16 @@ pub fn handler<'a, 'b, 'c, 'info>(
         } else if prize_id == 2 {
             bundle_id = 1;
         }
-        let current_time = Clock::get()?.unix_timestamp as u64;
         let bundle_minter = next_account_info(rem_accts)?;
         let bundle_mint = next_account_info(rem_accts)?;
         let bundle_ata = next_account_info(rem_accts)?;
         let bundle_metadata = next_account_info(rem_accts)?;
+        let bundle_edition = next_account_info(rem_accts)?;
         mint_bundle(
             bundle_mint.to_account_info(),
             bundle_ata.to_account_info(),
             bundle_metadata.to_account_info(),
+            bundle_edition.to_account_info(),
             bundle_minter.to_account_info(),
             accts.user.to_account_info(),
             accts.token_metadata_program.to_account_info(),
@@ -121,7 +124,7 @@ pub fn handler<'a, 'b, 'c, 'info>(
             accts.system_program.to_account_info(),
             accts.rent.to_account_info(),
             accts.global_state.treasury,
-            ctx.program_id,
+            &crate::ID,
             bundle_id,
         )?;
     }

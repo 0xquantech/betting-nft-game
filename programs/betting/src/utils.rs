@@ -4,11 +4,11 @@ use anchor_lang::{
     solana_program::{hash::hash, program::invoke_signed, pubkey},
 };
 use anchor_spl::{
-    associated_token::AssociatedToken,
+    associated_token::{self, AssociatedToken, Create},
     token::{self, Mint, MintTo, Token, TokenAccount, Transfer},
 };
 use mpl_token_metadata::{
-    instruction::create_metadata_accounts_v2, 
+    instruction::{ create_metadata_accounts_v2, create_master_edition_v3 }, 
     state::{ 
         Creator,
         Metadata,
@@ -39,17 +39,39 @@ pub fn fragment_seed(
 }
 
 pub fn mint_fragment<'a>(
+    authority: AccountInfo<'a>,
     mint: AccountInfo<'a>,
     to: AccountInfo<'a>,
     mint_auth: AccountInfo<'a>,
     bump: u8,
     token_program: AccountInfo<'a>,
+    associated_token_program: AccountInfo<'a>,
+    system_program: AccountInfo<'a>,
+    rent: AccountInfo<'a>,
     program_id: &Pubkey,
     fragment_no: u8
 ) -> Result<()> {
     // verify mint_key
     let (mint_key, _) = Pubkey::find_program_address(&[fragment_seed(fragment_no).as_str().as_ref()], program_id);
     require!(mint_key.eq(&mint.key()), BettingError::IncorrectMint);
+
+    if !to.owner.eq(&token_program.key()) {
+        // this means ata is not created
+        associated_token::create(
+            CpiContext::new(
+                associated_token_program.clone(),
+                Create {
+                    payer: authority.to_account_info(),
+                    associated_token: to.clone(),
+                    authority: authority.to_account_info(),
+                    mint: mint.to_account_info(),
+                    system_program: system_program.clone(),
+                    token_program: token_program.clone(),
+                    rent: rent.clone()
+                },
+            )
+        )?;
+    }
     let signer_seeds = &[GLOBAL_STATE_SEED, &[bump]];
     token::mint_to(
         CpiContext::new(
@@ -70,6 +92,7 @@ pub fn mint_nft<'a>(
     mint: AccountInfo<'a>,
     to: AccountInfo<'a>,
     metadata: AccountInfo<'a>,
+    edition: AccountInfo<'a>,
     collection_minter: AccountInfo<'a>,
     user: AccountInfo<'a>,
     token_metadata_program: AccountInfo<'a>,
@@ -140,6 +163,33 @@ pub fn mint_nft<'a>(
         &[signer_seeds],
     )?;
 
+    let account_info = vec![
+        edition.clone(),
+        mint.clone(),
+        collection_minter.clone(),
+        metadata.clone(),
+        user.clone(),
+        token_metadata_program.clone(),
+        token_program.clone(),
+        system_program.clone(),
+        rent.clone(),
+    ];
+    invoke_signed(
+        &create_master_edition_v3(
+            token_metadata_program.key(),
+            edition.key(),
+            mint.key(),
+            collection_minter.key(), // update_authority
+            collection_minter.key(), // mint_authority
+            metadata.key(),
+            user.key(),
+            Some(1)
+        ),
+        account_info.as_slice(),
+        &[signer_seeds],
+    )?;
+
+
     Ok(())
 }
 
@@ -147,6 +197,7 @@ pub fn mint_bundle<'a>(
     mint: AccountInfo<'a>,
     to: AccountInfo<'a>,
     metadata: AccountInfo<'a>,
+    edition: AccountInfo<'a>,
     collection_minter: AccountInfo<'a>,
     user: AccountInfo<'a>,
     token_metadata_program: AccountInfo<'a>,
@@ -218,6 +269,32 @@ pub fn mint_bundle<'a>(
         &[signer_seeds],
     )?;
 
+    let account_info = vec![
+        edition.clone(),
+        mint.clone(),
+        collection_minter.clone(),
+        metadata.clone(),
+        user.clone(),
+        token_metadata_program.clone(),
+        token_program.clone(),
+        system_program.clone(),
+        rent.clone(),
+    ];
+    invoke_signed(
+        &create_master_edition_v3(
+            token_metadata_program.key(),
+            edition.key(),
+            mint.key(),
+            collection_minter.key(), // update_authority
+            collection_minter.key(), // mint_authority
+            metadata.key(),
+            user.key(),
+            Some(1)
+        ),
+        account_info.as_slice(),
+        &[signer_seeds],
+    )?;
+    
     Ok(())
 }
 

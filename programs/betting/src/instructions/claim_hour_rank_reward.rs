@@ -132,11 +132,15 @@ pub fn handler<'a, 'b, 'c, 'info>(
         }
 
         mint_fragment(
+            accts.user.to_account_info(),
             fragment_mint.to_account_info(),
             fragment_ata.to_account_info(),
             accts.global_state.to_account_info(),
             *ctx.bumps.get("global_state").unwrap(),
             accts.token_program.to_account_info(),
+            accts.associated_token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
             ctx.program_id,
             sel_rand_id as u8 + 1,
         )?;

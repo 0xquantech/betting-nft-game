@@ -177,10 +177,10 @@ pub mod betting {
         buy_bundle::handler(ctx, bundle_id)
     }
 
-    pub fn burn_fragment<'a, 'b, 'c, 'info>(
-        ctx: Context<'a, 'b, 'c, 'info, BurnFragment<'info>>,
+    pub fn burn_fragments<'a, 'b, 'c, 'info>(
+        ctx: Context<'a, 'b, 'c, 'info, BurnFragments<'info>>,
     ) -> Result<()> {
-        burn_fragment::handler(ctx)
+        burn_fragments::handler(ctx)
     }
 
     pub fn init_nft_build<'a, 'b, 'c, 'info>(

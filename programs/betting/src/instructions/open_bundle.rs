@@ -115,10 +115,9 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .unwrap_or(0);
 
     msg!("bundle id {}", bundle_id);
-    let fragment_minter = next_account_info(rem_accts)?;
     for i in 0..BUNDLE_REWARD_COUNT[bundle_id] {
         let rand_val = current_time % 1001;
-        let fragment_no = BUNDLE_FRAGMENT_RATE[bundle_id as usize]
+        let fragment_id = BUNDLE_FRAGMENT_RATE[bundle_id as usize]
             .iter()
             .position(|&rate| rand_val <= rate as u64)
             .unwrap_or(0);
@@ -127,19 +126,23 @@ pub fn handler<'a, 'b, 'c, 'info>(
         
         let mut fragment_mint = next_account_info(iter)?;
         let mut fragment_ata = next_account_info(iter)?;
-        for i in 0..fragment_no {
+        for i in 0..fragment_id {
             fragment_mint = next_account_info(iter)?;
             fragment_ata = next_account_info(iter)?;
         }
 
         mint_fragment(
+            accts.user.to_account_info(),
             fragment_mint.to_account_info(),
             fragment_ata.to_account_info(),
             accts.global_state.to_account_info(),
             *ctx.bumps.get("global_state").unwrap(),
             accts.token_program.to_account_info(),
+            accts.associated_token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
             ctx.program_id,
-            fragment_no as u8 + 1,
+            fragment_id as u8 + 1,
         )?;
     }
 

@@ -37,6 +37,10 @@ pub struct BuyBundle<'info> {
     #[account(mut)]
     /// CHECK: safe
     pub bundle_metadata: AccountInfo<'info>,
+
+    #[account(mut)]
+    /// CHECK: safe
+    pub bundle_edition: AccountInfo<'info>,
     
     #[account(
       mut,
@@ -122,6 +126,7 @@ pub fn handler<'a, 'b, 'c, 'info>(
         accts.bundle_mint.to_account_info(),
         accts.user_bundle_ata.to_account_info(),
         accts.bundle_metadata.to_account_info(),
+        accts.bundle_edition.to_account_info(),
         accts.bundle_creator.to_account_info(),
         accts.user.to_account_info(),
         accts.token_metadata_program.to_account_info(),

@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward
 } from "./libs/instructions";
 import { delay } from "./libs/utils";
 import { mintTo } from "@solana/spl-token";
@@ -119,31 +119,31 @@ describe("betting", () => {
     ).is.rejected;
   });
 
-  xit("UserA claim Reward", async () => {
+  it("UserA claim Reward", async () => {
     const tx = await claimReward(bettingAccounts, userA, userD, arenaId);
   })
 
-  xit("UserC claim Reward", async () => {
+  it("UserC claim Reward", async () => {
     const tx = await claimReward(bettingAccounts, userC, userD, arenaId);
   })
   
-  xit("End Hour", async () => {
+  it("End Hour", async () => {
     await endHour(bettingAccounts, admin);
   });
 
-  xit("End Day", async () => {
+  it("End Day", async () => {
     await endDay(bettingAccounts, admin);
   });
 
-  xit("End Week", async () => {
+  it("End Week", async () => {
     await endWeek(bettingAccounts, admin);
   });
 
-  xit("Claim hour rank reward", async () => {
+  it("Claim hour rank reward", async () => {
     await claimHourRankReward(bettingAccounts, userA);
   });
 
-  xit("Claim day rank reward", async () => {
+  it("Claim day rank reward", async () => {
     await claimDayRankReward(bettingAccounts, userA);
   });
 
@@ -151,7 +151,7 @@ describe("betting", () => {
     await claimWeekRankReward(bettingAccounts, userA);
   });
 
-  xit("Claim Ref reward", async () => {
+  it("Claim Ref reward", async () => {
     await claimRefReward(bettingAccounts, userD);
   })
 
@@ -191,14 +191,19 @@ describe("betting", () => {
   })
 
   it("UserA open bundle", async () => {
-    await openBundle(bettingAccounts, userA, bundle0_mint);
+    await openBundle(bettingAccounts, userA, bundle4_mint);
   })
 
   it("UserA mints Fragment and burn", async () => {
     for (let i = 1; i <= 9; i ++) 
       await mintFragment(bettingAccounts, userA, i);
 
-    const tx = await buildNFT(bettingAccounts, admin);
+     const tx = await burnFragments(bettingAccounts, userA);
+     await buildNFT(bettingAccounts, userA);
+  })
+
+  it("userA claim 8h box reward", async () => {
+    await claimEightBoxReward(bettingAccounts, userA, 0);
   })
 
 });

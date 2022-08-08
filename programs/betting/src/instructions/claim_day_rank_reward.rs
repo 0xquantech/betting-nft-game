@@ -100,10 +100,6 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .unwrap();
     let reward_amount = accts.day_result.reward_per_tier[position];
 
-    msg!("day bet amount = {}", accts.user_day_state.bet_amount);
-    msg!("reward tiers = {:?}", accts.day_result.reward_per_tier);
-    msg!("reward_amount = {}", reward_amount);
-
     let signer_seeds = &[
         GLOBAL_STATE_SEED,
         &[*(ctx.bumps.get("global_state").unwrap())],
@@ -117,14 +113,22 @@ pub fn handler<'a, 'b, 'c, 'info>(
     if position == 0 {
         let current_time = Clock::get()?.unix_timestamp as u64;
         let fragment_no = 9u8; // in week rank, the top winner will get Fragment 9.
-        let fragment_mint = next_account_info(rem_accts)?;
-        let fragment_ata = next_account_info(rem_accts)?;
+        let mut fragment_mint = next_account_info(rem_accts)?;
+        let mut fragment_ata = next_account_info(rem_accts)?;
+        for i in 0..8 {
+            fragment_mint = next_account_info(rem_accts)?;
+            fragment_ata = next_account_info(rem_accts)?;
+        }
         mint_fragment(
+            accts.user.to_account_info(),
             fragment_mint.to_account_info(),
             fragment_ata.to_account_info(),
             accts.global_state.to_account_info(),
             *ctx.bumps.get("global_state").unwrap(),
             accts.token_program.to_account_info(),
+            accts.associated_token_program.to_account_info(),
+            accts.system_program.to_account_info(),
+            accts.rent.to_account_info(),
             ctx.program_id,
             fragment_no,
         )?;

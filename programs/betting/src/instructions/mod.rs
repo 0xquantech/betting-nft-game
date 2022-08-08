@@ -70,8 +70,8 @@ pub use build_nft::*;
 pub mod buy_bundle;
 pub use buy_bundle::*;
 
-pub mod burn_fragment;
-pub use burn_fragment::*;
+pub mod burn_fragments;
+pub use burn_fragments::*;
 
 pub mod init_nft_build;
 pub use init_nft_build::*;
