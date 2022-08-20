@@ -23,7 +23,7 @@ import { getPassedHours } from "../tests/libs/utils";
 const connection = new Connection(clusterApiUrl("devnet"));
 // 36gJMRpN2dTyYegNBtTa5RvndhWr7vPL91E7hV5zcQKA
 const admin = anchor.web3.Keypair.fromSecretKey(bs58.decode("3EFsWUQQuU32XaTrvhQGaYqUhWJiPayWA64CrU7f6cU7Jdbbm77tJE2y89DfByuFavp8X3jwAxuG4oxbDhYXcHJG"));
-let provider = new anchor.Provider(connection, new NodeWallet(admin), anchor.Provider.defaultOptions())
+let provider = new anchor.AnchorProvider(connection, new NodeWallet(admin), anchor.AnchorProvider.defaultOptions())
 const program = new anchor.Program(IDL, Constants.PROGRAM_ID, provider);
 
 const endHour = async () => {
@@ -63,7 +63,7 @@ const endHour = async () => {
   console.log("tiers =", tiers.map(v => v.toString()));
 
   let txHash = await program.methods
-    .endHour(hour, tiers.map((v) => new BN(v)), rewardPerTier.map(v => new BN(v)))
+    .endHour(hour, tiers.map((v) => new BN(v)), rewardPerTier.map(v => new BN(v * 10 ** Constants.FEEL_DECIMALS)))
     .accounts({
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),

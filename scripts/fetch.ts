@@ -36,6 +36,12 @@ export const fetchUserState = async (
   return await fetchData(program, "userState", key);
 };
 
+export const fetchEightBoxState = async (
+  program: any,
+  key: PublicKey
+): Promise<IdlAccounts<Betting>["eightBoxState"] | null> => {
+  return await fetchData(program, "eightBoxState", key);
+};
 
 export const fetchHourState = async (
   program: any,

@@ -11,18 +11,19 @@ use mpl_token_metadata::ID as MetadataProgramId;
 #[derive(Accounts)]
 pub struct MintFragment<'info> {
     #[account(mut)]
-    pub user: Signer<'info>,
+    pub authority: Signer<'info>,
 
     #[account(
       seeds = [GLOBAL_STATE_SEED],
       bump,
+      has_one = authority
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
     #[account(mut)]
     pub mint: Account<'info, Mint>,
 
-    #[account(init_if_needed, payer = user, associated_token::mint = mint, associated_token::authority = user)]
+    #[account(init_if_needed, payer = authority, associated_token::mint = mint, associated_token::authority = authority)]
     pub user_ata: Account<'info, TokenAccount>,
 
     pub token_program: Program<'info, Token>,
@@ -46,7 +47,7 @@ pub fn handler<'a, 'b, 'c, 'info>(
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
     mint_fragment(
-        accts.user.to_account_info(),
+        accts.authority.to_account_info(),
         accts.mint.to_account_info(),
         accts.user_ata.to_account_info(),
         accts.global_state.to_account_info(),

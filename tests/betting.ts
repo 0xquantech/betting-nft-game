@@ -13,7 +13,9 @@ import {
   openArena,
   endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward
 } from "./libs/instructions";
+
 import { delay } from "./libs/utils";
+
 import { mintTo } from "@solana/spl-token";
 
 chaiUse(chaiAsPromised);
@@ -194,16 +196,16 @@ describe("betting", () => {
     await openBundle(bettingAccounts, userA, bundle4_mint);
   })
 
-  it("UserA mints Fragment and burn", async () => {
-    for (let i = 1; i <= 9; i ++) 
-      await mintFragment(bettingAccounts, userA, i);
-
-     const tx = await burnFragments(bettingAccounts, userA);
-     await buildNFT(bettingAccounts, userA);
-  })
-
   it("userA claim 8h box reward", async () => {
     await claimEightBoxReward(bettingAccounts, userA, 0);
+  })
+
+  it("UserA mints Fragment and burn", async () => {
+    for (let i = 1; i <= 9; i ++) 
+      await mintFragment(bettingAccounts, admin, i);
+
+     const tx = await burnFragments(bettingAccounts, admin);
+     await buildNFT(bettingAccounts, admin);
   })
 
 });

@@ -13,19 +13,19 @@ address = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
 address = "PwDiXFxQsGra4sFFTT8r1QWRMd4vfumiWC1jfWNfdYT"
 
 [programs.localnet]
-betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
+betting = "F9cCsF2K73VcydesyJnk2GNA6igt82Roo4CQDkkk7dN"
 
 [programs.devnet]
-betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
+betting = "F9cCsF2K73VcydesyJnk2GNA6igt82Roo4CQDkkk7dN"
 
 [programs.mainnet]
-betting = "CkjLXWUbYttpTxDXvSxy3gwzA7PUfxs2W25F7kR7zE2j"
+betting = "F9cCsF2K73VcydesyJnk2GNA6igt82Roo4CQDkkk7dN"
 
 [registry]
 url = "https://anchor.projectserum.com"
 
 [provider]
-cluster = "localnet"
+cluster = "devnet"
 wallet = "./test-key.json"
 
 [scripts]

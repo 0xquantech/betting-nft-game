@@ -271,8 +271,11 @@ export const userBet = async (
     )
   }
   transaction.add(await program.methods
-    .userBet(new BN(arenaId), amountInDecimal, hour, day, week, eight_box_id, betSide ? 1 : 0, refKey, hash_arr)
-    .accounts({
+    .userBet(
+      new BN(arenaId), amountInDecimal, 
+      hour, day, week, eight_box_id, 
+      betSide ? 1 : 0, refKey, hash_arr
+    ).accounts({
       user: user.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
@@ -282,6 +285,7 @@ export const userBet = async (
       userDayState: dayStateKey,
       userWeekState: weekStateKey,
       eightBoxState: eightBoxStateKey,
+      
       userAta: user.bettingMintAta,
       escrowAta: accts.escrowAta,
       tokenMint: accts.bettingMint,
@@ -355,11 +359,14 @@ export const claimReward = async (
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
       userBetState: await keys.getUserBetStateKey(arenaId, user.publicKey),
+      userState: user.userStateKey,
+
       userAta: user.bettingMintAta,
       escrowAta: accts.escrowAta,
-      userState: user.userStateKey,
+      
       refUserState: refUser.userStateKey,
       refUserVaultAta,
+
       tokenMint: accts.bettingMint,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
@@ -983,7 +990,7 @@ export const buyBundle = async (accts: BettingAccounts, user: User, bundleId: nu
 };
 export const mintFragment = async (
   accts: BettingAccounts, 
-  user: User,
+  admin: User,
   fragmentNo: number
 ) => {
   const globalStateKey = await keys.getGlobalStateKey();
@@ -994,7 +1001,7 @@ export const mintFragment = async (
   transaction.add(await program.methods
     .mintFragment(fragmentNo)
     .accounts({
-      user: user.publicKey,
+      authority: admin.publicKey,
       globalState: globalStateKey,
       mint: mintKey,
       userAta: ataKey,
@@ -1003,12 +1010,12 @@ export const mintFragment = async (
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([user.keypair])
+    .signers([admin.keypair])
     .instruction()
   );  
   await sendOrSimulateTransaction(
     transaction,
-    [user.keypair],
+    [admin.keypair],
     connection,
     false
   );

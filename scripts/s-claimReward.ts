@@ -26,7 +26,7 @@ import { getHashArr } from "../tests/libs/utils";
 const connection = new Connection(clusterApiUrl("devnet"));
 // 36gJMRpN2dTyYegNBtTa5RvndhWr7vPL91E7hV5zcQKA
 const user = anchor.web3.Keypair.fromSecretKey(bs58.decode("3EFsWUQQuU32XaTrvhQGaYqUhWJiPayWA64CrU7f6cU7Jdbbm77tJE2y89DfByuFavp8X3jwAxuG4oxbDhYXcHJG"));
-let provider = new anchor.Provider(connection, new NodeWallet(user), anchor.Provider.defaultOptions())
+let provider = new anchor.AnchorProvider(connection, new NodeWallet(user), anchor.AnchorProvider.defaultOptions())
 const program = new anchor.Program(IDL, Constants.PROGRAM_ID, provider);
 
 const claimReward = async (

@@ -19,7 +19,7 @@ import bs58 from 'bs58';
 import { IDL } from "../target/types/betting";
 import * as Constants from "./constants";
 import * as keys from "./keys";
-import { fetchDayState, fetchHourState, fetchUserState, fetchWeekState } from "./fetch";
+import { fetchDayState, fetchEightBoxState, fetchHourState, fetchUserState, fetchWeekState } from "./fetch";
 import { createUserStateInstruction } from "./createUserState";
 
 import crypto from 'crypto';
@@ -28,7 +28,7 @@ import { getPassedTime } from "./utils";
 const connection = new Connection(clusterApiUrl("devnet"));
 // 36gJMRpN2dTyYegNBtTa5RvndhWr7vPL91E7hV5zcQKA
 const wallet = anchor.web3.Keypair.fromSecretKey(bs58.decode("3EFsWUQQuU32XaTrvhQGaYqUhWJiPayWA64CrU7f6cU7Jdbbm77tJE2y89DfByuFavp8X3jwAxuG4oxbDhYXcHJG"));
-let provider = new anchor.Provider(connection, new NodeWallet(wallet), anchor.Provider.defaultOptions())
+let provider = new anchor.AnchorProvider(connection, new NodeWallet(wallet), anchor.AnchorProvider.defaultOptions())
 const program = new anchor.Program(IDL, Constants.PROGRAM_ID, provider);
 
 const userBet = async (
@@ -53,26 +53,22 @@ const userBet = async (
   const transaction = new Transaction()
   
   if (!await fetchUserState(program, userStateKey)) {
-    await transaction.add(program.instruction.initUserState(
-       wallet.publicKey,
-     {
-       accounts: {
-         payer: wallet.publicKey,
-         userState: userStateKey,
-         systemProgram: SystemProgram.programId,
-         rent: SYSVAR_RENT_PUBKEY,
-       }
-     }
-     ));
+    transaction.add(await createUserStateInstruction(
+      program,
+      wallet.publicKey,
+      wallet.publicKey,
+      userStateKey
+    ));
    }
  
    let dateNow = Date.now();
-   const { hour, day, week } = getPassedTime(dateNow);
+   const { hour, day, week, eightBoxId } = getPassedTime(dateNow);
  
    let hourStateKey = await keys.getUserHourStateKey(wallet.publicKey, hour);
    let dayStateKey = await keys.getUserDayStateKey(wallet.publicKey, day);
    let weekStateKey = await keys.getUserWeekStateKey(wallet.publicKey, week);
-   
+   let eightBoxStateKey = await keys.getEightBoxStateKey(wallet.publicKey, eightBoxId);
+
    if (!(await fetchHourState(program, hourStateKey))) {
      transaction.add(await program.methods
        .initHourState(wallet.publicKey, hour)
@@ -109,6 +105,18 @@ const userBet = async (
        .instruction()
      )
    }
+   if (!(await fetchEightBoxState(program, eightBoxStateKey))) {
+    transaction.add(await program.methods
+      .initEightBoxState(wallet.publicKey, eightBoxId)
+      .accounts({
+        payer: wallet.publicKey,
+        eightBoxState: eightBoxStateKey,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY
+      })
+      .instruction()
+    )
+  }
  
    transaction.add(
        await program.methods.userBet(
@@ -117,6 +125,7 @@ const userBet = async (
            hour,
            day,
            week,
+           eightBoxId,
            isGoUp ? 1 : 0, 
            referrerKey, 
            hashArr
@@ -129,6 +138,8 @@ const userBet = async (
              userHourState: hourStateKey,
              userDayState: dayStateKey,
              userWeekState: weekStateKey,
+             eightBoxState: eightBoxStateKey,
+
              userAta,
              escrowAta,
              tokenMint: mint,
