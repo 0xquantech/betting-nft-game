@@ -21,16 +21,14 @@ pub struct OpenBundle<'info> {
 
     #[account(
         seeds = [GLOBAL_STATE_SEED],
-        bump
+        bump,
+        has_one = btc_pyth_account,
+        has_one = eth_pyth_account,
+        has_one = sol_pyth_account,
+        has_one = avax_pyth_account,
+        has_one = ada_pyth_account,
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
-
-    #[account(
-        seeds = [BUNDLE_MINTER_SEED],
-        bump
-    )]
-    /// CHECK:
-    pub bundle_creator: AccountInfo<'info>,
 
     #[account(
         mut,
@@ -46,11 +44,19 @@ pub struct OpenBundle<'info> {
     /// CHECK:
     pub bundle_metadata: AccountInfo<'info>,
 
+    /// CHECK: in global_state
+    pub btc_pyth_account: AccountInfo<'info>,
+    /// CHECK: in global_state
+    pub eth_pyth_account: AccountInfo<'info>,
+    /// CHECK: in global_state
+    pub sol_pyth_account: AccountInfo<'info>,
+    /// CHECK: in global_state
+    pub avax_pyth_account: AccountInfo<'info>,
+    /// CHECK: in global_state
+    pub ada_pyth_account: AccountInfo<'info>,
+
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
-    #[account(address = MetadataProgramID)]
-    /// CHECK:
-    pub token_metadata_program: AccountInfo<'info>,
     pub system_program: Program<'info, System>,
     pub rent: Sysvar<'info, Rent>,
 }
@@ -89,9 +95,13 @@ impl<'info> OpenBundle<'info> {
             return Err(error!(BettingError::IncorrectMetadata));
         }
 
+        let (bundle_creator_key, _) = Pubkey::find_program_address(
+          &[BUNDLE_MINTER_SEED.as_ref()],
+          &crate::ID,
+        );
         require_keys_eq!(
             verified_creator.unwrap().address,
-            self.bundle_creator.key(),
+            bundle_creator_key,
             BettingError::IncorrectMetadata
         );
         Ok(())
@@ -105,6 +115,14 @@ pub fn handler<'a, 'b, 'c, 'info>(
     let current_time = Clock::get()?.unix_timestamp as u64;
 
     let accts = ctx.accounts;
+    let pyth_vec = vec![
+      &accts.btc_pyth_account,
+      &accts.eth_pyth_account,
+      &accts.sol_pyth_account,
+      &accts.avax_pyth_account,
+      &accts.ada_pyth_account,
+    ];
+
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
     let bundle_meta: Metadata = Metadata::from_account_info(&accts.bundle_metadata)?;
@@ -114,13 +132,20 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .position(|&name| name.to_string().eq(&bundle_name))
         .unwrap_or(0);
 
-    msg!("bundle id {}", bundle_id);
+    msg!("bundle id {} reward count {}", bundle_id, BUNDLE_REWARD_COUNT[bundle_id]);
     for i in 0..BUNDLE_REWARD_COUNT[bundle_id] {
-        let rand_val = current_time % 1001;
+        let pyth_account = pyth_vec[i as usize];
+        let pyth_price_data = &pyth_account.try_borrow_data()?;
+        let pyth_price = pyth_client::cast::<pyth_client::Price>(pyth_price_data);
+        msg!("pyth_price.agg.price = {}", pyth_price.agg.price);
+
+        let rand_val = (pyth_price.agg.price as u64).checked_add(current_time).unwrap() % RATE_DEVIDER;
         let fragment_id = BUNDLE_FRAGMENT_RATE[bundle_id as usize]
             .iter()
             .position(|&rate| rand_val <= rate as u64)
             .unwrap_or(0);
+        
+        msg!("rand fragment_id = {}", fragment_id);
 
         let iter = &mut ctx.remaining_accounts.iter();
         
@@ -157,6 +182,6 @@ pub fn handler<'a, 'b, 'c, 'info>(
         ),
         1,
     )?;
-    
+    //Err(ProgramError::InvalidAccountData.into())
     Ok(())
 }

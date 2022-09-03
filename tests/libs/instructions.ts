@@ -44,7 +44,14 @@ export const initializeProgram = async (accts: BettingAccounts, admin: User) => 
     true
   );
   await sendOrSimulateTransaction(await program.methods
-    .initialize(admin.publicKey)
+    .initialize(
+      admin.publicKey,
+      new PublicKey(Constants.BTC_PYTH_ACCOUNT),
+      new PublicKey(Constants.ETH_PYTH_ACCOUNT),
+      new PublicKey(Constants.SOL_PYTH_ACCOUNT),
+      new PublicKey(Constants.AVAX_PYTH_ACCOUNT),
+      new PublicKey(Constants.ADA_PYTH_ACCOUNT),
+    )
     .accounts({
       authority: admin.publicKey,
       globalState: globalStateKey,
@@ -53,7 +60,6 @@ export const initializeProgram = async (accts: BettingAccounts, admin: User) => 
       tokenMint: accts.bettingMint,
       rankMint: accts.rankMint,
       treasury: new PublicKey(Constants.TREASURY),
-      pythAccount: accts.pythAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,
@@ -124,7 +130,7 @@ export const startArena = async (accts: BettingAccounts, admin: User, arenaId: n
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: accts.pythAccount,
+      solPythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
@@ -142,7 +148,7 @@ export const cancelArena = async (accts: BettingAccounts, admin: User, arenaId: 
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: accts.pythAccount
+      solPythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT)
     })
     .signers([admin.keypair])
     .transaction(),
@@ -160,7 +166,7 @@ export const endArena = async (accts: BettingAccounts, admin: User, arenaId: num
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: accts.pythAccount,
+      solPythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT),
       treasury: Constants.TREASURY,
       treasuryAta,
       escrowAta: accts.escrowAta,
@@ -653,8 +659,12 @@ export const claimHourRankReward = async (
 
   let remainingAccounts: AccountMeta[] = [];
   let transaction = new Transaction();
-  if (rank == 1) {
-    await prepareMintFragment(user, remainingAccounts);
+
+  let instructions: TransactionInstruction[] = [];
+  let signers: Signer[] = [];
+  if (rank == 1) {    
+    await prepareMintBundle(user, remainingAccounts, instructions, signers, 1);
+    transaction.add(...instructions);
   }
 
   transaction.add(await program.methods
@@ -679,7 +689,7 @@ export const claimHourRankReward = async (
 
   await sendOrSimulateTransaction(
     transaction,
-    [user.keypair],
+    [user.keypair, ...signers],
     connection,
     false
   );
@@ -719,10 +729,13 @@ export const claimDayRankReward = async (
   let remainingAccounts: AccountMeta[] = [];
   let transaction = new Transaction();
   
-  if (rank == 1) {
-    await prepareMintFragment(user, remainingAccounts);
+  let instructions: TransactionInstruction[] = [];
+  let signers: Signer[] = [];
+  if (rank == 1) {    
+    await prepareMintBundle(user, remainingAccounts, instructions, signers, 1);
+    transaction.add(...instructions);
   }
-  
+
   transaction.add(await program.methods
     .claimDayRankReward(day)
     .accounts({
@@ -745,7 +758,7 @@ export const claimDayRankReward = async (
   );
   await sendOrSimulateTransaction(
     transaction,
-    [user.keypair],
+    [user.keypair, ...signers],
     connection,
     false
   );
@@ -788,10 +801,10 @@ export const claimWeekRankReward = async (
   let instructions = [];
   if (rank == 1) {
     await prepareMintNft(user, remainingAccounts, instructions, signers);
-    transaction.add(...instructions);
   } else if (rank == 2 || rank == 3) {
-    await prepareMintFragment(user, remainingAccounts);
+    await prepareMintBundle(user, remainingAccounts, instructions, signers);
   }
+  transaction.add(...instructions);
 
   transaction.add(await program.methods
     .claimWeekRankReward(week)
@@ -837,11 +850,7 @@ export const claimEightBoxReward = async (
   let signers = [];
   let transaction = new Transaction();
   // prize_id starts from 0
-  if (prize_id == 1) {
-    await prepareMintBundle(user, remainingAccounts, instructions, signers, 2);
-  } else {
-    await prepareMintBundle(user, remainingAccounts, instructions, signers, 1);
-  }
+  await prepareMintBundle(user, remainingAccounts, instructions, signers, 1);
   transaction.add(...instructions);
   transaction.add(await program.methods
     .claimEightBox(eight_box_id, prize_id)
@@ -988,6 +997,58 @@ export const buyBundle = async (accts: BettingAccounts, user: User, bundleId: nu
   );
   return remainingAccounts[1].pubkey;
 };
+
+
+export const buyNft = async (accts: BettingAccounts, user: User) => {
+  const globalStateKey = await keys.getGlobalStateKey();
+  const feelVaultAta = await getAssociatedTokenAddress(
+    accts.rankMint,
+    globalStateKey,
+    true
+  );
+  
+  const userFeelAta = await getAssociatedTokenAddress(
+    accts.rankMint,
+    user.publicKey
+  );
+  console.log("feelAmount = ", (await connection.getTokenAccountBalance(userFeelAta)).value.uiAmount);
+  
+  let signers = [];
+  let instructions = [];
+  let remainingAccounts: AccountMeta[] = [];
+  await prepareMintNft(user, remainingAccounts, instructions, signers);
+  let transaction = new Transaction();
+  transaction.add(...instructions);
+  transaction.add(await program.methods
+    .buyNft()
+    .accounts({
+      user: user.publicKey,
+      globalState: globalStateKey,
+      nftCreator: remainingAccounts[0].pubkey,
+      nftMint: remainingAccounts[1].pubkey,
+      userNftAta: remainingAccounts[2].pubkey,
+      nftMetadata: remainingAccounts[3].pubkey,
+      nftEdition: remainingAccounts[4].pubkey,
+      feelVaultAta,
+      userFeelAta,
+      feelMint: accts.rankMint,
+      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
+      tokenProgram: TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([user.keypair])
+    .instruction()
+  );
+  await sendOrSimulateTransaction(
+    transaction,
+    [user.keypair, ...signers],
+    connection,
+    false
+  );
+  return remainingAccounts[1].pubkey;
+};
+
 export const mintFragment = async (
   accts: BettingAccounts, 
   admin: User,
@@ -997,7 +1058,7 @@ export const mintFragment = async (
   let transaction = new Transaction();
   
   let mintKey = await keys.getFragmentMintKey(fragmentNo);
-  let ataKey = await getAssociatedTokenAddress(mintKey, user.publicKey);
+  let ataKey = await getAssociatedTokenAddress(mintKey, admin.publicKey);
   transaction.add(await program.methods
     .mintFragment(fragmentNo)
     .accounts({
@@ -1049,13 +1110,18 @@ export const openBundle = async (
     .accounts({
       user: user.publicKey,
       globalState: globalStateKey,
-      bundleCreator: bundleMinterKey,
       userBundleAta,
       bundleMint,
       bundleMetadata: bundleMetaKey,
+
+      btcPythAccount: new PublicKey(Constants.BTC_PYTH_ACCOUNT),
+      ethPythAccount: new PublicKey(Constants.ETH_PYTH_ACCOUNT),
+      solPythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT),
+      avaxPythAccount: new PublicKey(Constants.AVAX_PYTH_ACCOUNT),
+      adaPythAccount: new PublicKey(Constants.ADA_PYTH_ACCOUNT),
+
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
-      tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })
@@ -1110,7 +1176,6 @@ export const buildNFT = async (
     false
   );
 };
-
 
 export const fetchData = async (type: string, key: PublicKey) => {
   return await program.account[type].fetchNullable(key);
@@ -1171,7 +1236,6 @@ export const prepareMintFragment = async (
     remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: mint } as AccountMeta);
     remainingAccounts.push({ isSigner: false, isWritable: true, pubkey: fragmentAta } as AccountMeta);
   }
-
 }
 
 

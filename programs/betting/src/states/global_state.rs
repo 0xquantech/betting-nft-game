@@ -6,7 +6,13 @@ pub struct GlobalState {
     pub is_initialized: u8,
     pub authority: Pubkey,
     pub treasury: Pubkey,
-    pub pyth_account: Pubkey,
+    
+    pub btc_pyth_account: Pubkey,
+    pub eth_pyth_account: Pubkey,
+    pub sol_pyth_account: Pubkey,
+    pub avax_pyth_account: Pubkey,
+    pub ada_pyth_account: Pubkey,
+
     pub token_mint: Pubkey, // usdc
     pub rank_mint: Pubkey,  // feel
     pub arena_duration: u64,

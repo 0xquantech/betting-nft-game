@@ -11,7 +11,7 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward, buyNft
 } from "./libs/instructions";
 
 import { delay } from "./libs/utils";
@@ -39,7 +39,7 @@ describe("betting", () => {
   const cancelledArenaId = 2;
 
   let bundle0_mint = null;
-  let bundle4_mint = null;
+  let bundle6_mint = null;
   it("setup", async () => {
     await bettingAccounts.init(provider.connection);
     await admin.init(provider.connection, bettingAccounts);
@@ -189,11 +189,15 @@ describe("betting", () => {
 
   it("UserA buys bundles", async () => {
     bundle0_mint = await buyBundle(bettingAccounts, userA, 0);
-    bundle4_mint = await buyBundle(bettingAccounts, userA, 5);
+    bundle6_mint = await buyBundle(bettingAccounts, userA, 5);
+  })
+
+  it("UserA buys NFT", async () => {
+    await buyNft(bettingAccounts, userA);
   })
 
   it("UserA open bundle", async () => {
-    await openBundle(bettingAccounts, userA, bundle4_mint);
+    await openBundle(bettingAccounts, userA, bundle6_mint);
   })
 
   it("userA claim 8h box reward", async () => {

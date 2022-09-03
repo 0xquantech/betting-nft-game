@@ -34,7 +34,7 @@ const startArena = async (arenaId: number) => {
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: Constants.SOL_PYTH_ACCOUNT,
+      solPythAccount: Constants.SOL_PYTH_ACCOUNT,
       systemProgram: SystemProgram.programId,
       rent: SYSVAR_RENT_PUBKEY,
     })

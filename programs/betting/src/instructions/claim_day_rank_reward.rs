@@ -110,28 +110,29 @@ pub fn handler<'a, 'b, 'c, 'info>(
         reward_amount,
     )?;
 
+    // Top1 -> Pack5
     if position == 0 {
-        let current_time = Clock::get()?.unix_timestamp as u64;
-        let fragment_no = 9u8; // in week rank, the top winner will get Fragment 9.
-        let mut fragment_mint = next_account_info(rem_accts)?;
-        let mut fragment_ata = next_account_info(rem_accts)?;
-        for i in 0..8 {
-            fragment_mint = next_account_info(rem_accts)?;
-            fragment_ata = next_account_info(rem_accts)?;
-        }
-        mint_fragment(
-            accts.user.to_account_info(),
-            fragment_mint.to_account_info(),
-            fragment_ata.to_account_info(),
-            accts.global_state.to_account_info(),
-            *ctx.bumps.get("global_state").unwrap(),
-            accts.token_program.to_account_info(),
-            accts.associated_token_program.to_account_info(),
-            accts.system_program.to_account_info(),
-            accts.rent.to_account_info(),
-            ctx.program_id,
-            fragment_no,
-        )?;
+      msg!("position is zero");
+      let bundle_minter = next_account_info(rem_accts)?;
+      let bundle_mint = next_account_info(rem_accts)?;
+      let bundle_ata = next_account_info(rem_accts)?;
+      let bundle_metadata = next_account_info(rem_accts)?;
+      let bundle_edition = next_account_info(rem_accts)?;
+      mint_bundle(
+          bundle_mint.to_account_info(),
+          bundle_ata.to_account_info(),
+          bundle_metadata.to_account_info(),
+          bundle_edition.to_account_info(),
+          bundle_minter.to_account_info(),
+          accts.user.to_account_info(),
+          accts.token_metadata_program.to_account_info(),
+          accts.token_program.to_account_info(),
+          accts.system_program.to_account_info(),
+          accts.rent.to_account_info(),
+          accts.global_state.treasury,
+          ctx.program_id,
+          4,
+      )?;
     }
 
     accts.user_day_state.is_claimed = 1;

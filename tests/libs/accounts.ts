@@ -25,11 +25,11 @@ export class BettingAccounts {
   escrowAta: PublicKey;
   feelVaultAta: PublicKey;
   globalStateKey: PublicKey;
-  pythAccount: PublicKey;
+  
   constructor() {
     this.payerAndAuth = Keypair.generate();
-    this.pythAccount = new PublicKey("J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix");
   }
+  
   async init(connection: Connection) {
     this.globalStateKey = await keys.getGlobalStateKey();
     await airdropSol(

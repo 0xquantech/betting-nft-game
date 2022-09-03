@@ -40,7 +40,7 @@ const endArena = async (arenaId: number) => {
       authority: admin.publicKey,
       globalState: await keys.getGlobalStateKey(),
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: Constants.SOL_PYTH_ACCOUNT,
+      solPythAccount: Constants.SOL_PYTH_ACCOUNT,
 
       treasury: globalStateAccInfo.treasury,
       treasuryAta,

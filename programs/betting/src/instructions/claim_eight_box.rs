@@ -68,66 +68,37 @@ pub fn handler<'a, 'b, 'c, 'info>(
     let accts = ctx.accounts;
     let rem_accts = &mut ctx.remaining_accounts.iter();
 
-    // prize0: when user has spent 20$ he wins Bundle 1
-    // prize1: when user has spent 100$ he wins 2 Bundles 1
-    // prize2: when user has spent 400$ he wins Bundle 2
-    // prize3: when user has spent 1000$ he wins Bundle 3
-
-    // if prize_id 1, 2 * Bundle_ID 0
-    if prize_id == 1 {
-        let bundle_minter = next_account_info(rem_accts)?;
-        let current_time = Clock::get()?.unix_timestamp as u64;
-        let bundle_id = 0;
-
-        for i in 0..2 {
-            let bundle_mint = next_account_info(rem_accts)?;
-            let bundle_ata = next_account_info(rem_accts)?;
-            let bundle_metadata = next_account_info(rem_accts)?;
-            let bundle_edition = next_account_info(rem_accts)?;
-            mint_bundle(
-                bundle_mint.to_account_info(),
-                bundle_ata.to_account_info(),
-                bundle_metadata.to_account_info(),
-                bundle_edition.to_account_info(),
-                bundle_minter.to_account_info(),
-                accts.user.to_account_info(),
-                accts.token_metadata_program.to_account_info(),
-                accts.token_program.to_account_info(),
-                accts.system_program.to_account_info(),
-                accts.rent.to_account_info(),
-                accts.global_state.treasury,
-                ctx.program_id,
-                bundle_id,
-            )?;
-        }
-    } else {
-        let mut bundle_id = 0;
-        if prize_id == 3 {
-            bundle_id = 2;
-        } else if prize_id == 2 {
-            bundle_id = 1;
-        }
-        let bundle_minter = next_account_info(rem_accts)?;
-        let bundle_mint = next_account_info(rem_accts)?;
-        let bundle_ata = next_account_info(rem_accts)?;
-        let bundle_metadata = next_account_info(rem_accts)?;
-        let bundle_edition = next_account_info(rem_accts)?;
-        mint_bundle(
-            bundle_mint.to_account_info(),
-            bundle_ata.to_account_info(),
-            bundle_metadata.to_account_info(),
-            bundle_edition.to_account_info(),
-            bundle_minter.to_account_info(),
-            accts.user.to_account_info(),
-            accts.token_metadata_program.to_account_info(),
-            accts.token_program.to_account_info(),
-            accts.system_program.to_account_info(),
-            accts.rent.to_account_info(),
-            accts.global_state.treasury,
-            &crate::ID,
-            bundle_id,
-        )?;
+    let mut bundle_id = 0;
+    if prize_id == 0 {
+      bundle_id = 0;
+    } else if prize_id == 1 {
+      bundle_id = 3;
+    } else if prize_id == 2 {
+      bundle_id = 4;
+    } else if prize_id == 3 {
+      bundle_id = 5;
     }
+
+    let bundle_minter = next_account_info(rem_accts)?;
+    let bundle_mint = next_account_info(rem_accts)?;
+    let bundle_ata = next_account_info(rem_accts)?;
+    let bundle_metadata = next_account_info(rem_accts)?;
+    let bundle_edition = next_account_info(rem_accts)?;
+    mint_bundle(
+        bundle_mint.to_account_info(),
+        bundle_ata.to_account_info(),
+        bundle_metadata.to_account_info(),
+        bundle_edition.to_account_info(),
+        bundle_minter.to_account_info(),
+        accts.user.to_account_info(),
+        accts.token_metadata_program.to_account_info(),
+        accts.token_program.to_account_info(),
+        accts.system_program.to_account_info(),
+        accts.rent.to_account_info(),
+        accts.global_state.treasury,
+        ctx.program_id,
+        bundle_id,
+    )?;
 
     accts.eight_box_state.claimed_status =
         accts.eight_box_state.claimed_status | 2u8.pow(prize_id as u32);

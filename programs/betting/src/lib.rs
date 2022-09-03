@@ -22,8 +22,20 @@ use crate::views::*;
 pub mod betting {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, new_authority: Pubkey) -> Result<()> {
-        initialize::handler(ctx, new_authority)
+    pub fn initialize(ctx: Context<Initialize>, new_authority: Pubkey,
+        btc_pyth_account: Pubkey,
+        eth_pyth_account: Pubkey,
+        sol_pyth_account: Pubkey,
+        avax_pyth_account: Pubkey,
+        ada_pyth_account: Pubkey,
+    ) -> Result<()> {
+        initialize::handler(ctx, new_authority,
+          btc_pyth_account,
+          eth_pyth_account,
+          sol_pyth_account,
+          avax_pyth_account,
+          ada_pyth_account
+        )
     }
 
     pub fn open_arena(ctx: Context<OpenArena>, arena_id: u64) -> Result<()> {
@@ -79,6 +91,12 @@ pub mod betting {
         ctx: Context<'a, 'b, 'c, 'info, BuildNft<'info>>
     ) -> Result<()> {
         build_nft::handler(ctx)
+    }
+
+    pub fn buy_nft<'a, 'b, 'c, 'info>(
+      ctx: Context<'a, 'b, 'c, 'info, BuyNft<'info>>
+    ) -> Result<()> {
+        buy_nft::handler(ctx)
     }
 
     pub fn init_hour_state(ctx: Context<InitHourState>, user_key: Pubkey, hour: u64) -> Result<()> {

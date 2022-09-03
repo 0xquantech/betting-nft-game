@@ -21,7 +21,7 @@ pub struct CancelArena<'info> {
         seeds = [GLOBAL_STATE_SEED],
         bump,
         has_one = authority,
-        has_one = pyth_account
+        has_one = sol_pyth_account
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
 
@@ -33,7 +33,7 @@ pub struct CancelArena<'info> {
     pub arena_state: Box<Account<'info, ArenaState>>,
 
     /// CHECK:
-    pub pyth_account: AccountInfo<'info>,
+    pub sol_pyth_account: AccountInfo<'info>,
 }
 
 impl<'info> CancelArena<'info> {
@@ -47,7 +47,7 @@ pub fn handler(ctx: Context<CancelArena>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
 
     let accts = ctx.accounts;
-    let pyth_price_info = &accts.pyth_account;
+    let pyth_price_info = &accts.sol_pyth_account;
     let pyth_price_data = &pyth_price_info.try_borrow_data()?;
     let pyth_price = pyth_client::cast::<pyth_client::Price>(pyth_price_data);
 

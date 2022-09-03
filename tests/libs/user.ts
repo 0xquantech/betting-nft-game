@@ -65,7 +65,7 @@ export class User {
       accts.rankMint,
       this.feelAta,
       accts.payerAndAuth,
-      100_000_000_000
+      100_000_000_000_000
     );
     this.userStateKey = await keys.getUserStateKey(this.publicKey);
     this.userVaultAta = await createAta(

@@ -39,14 +39,14 @@ const init = async () => {
     true
   );
   
-  console.log("admin.publicKey =", admin.publicKey.toBase58());
-  console.log("escrowAta =", escrowAta.toBase58());
-  console.log("Constants.SOL_PYTH_ACCOUNT =", Constants.SOL_PYTH_ACCOUNT);
-  console.log("globalStateKey =", globalStateKey.toBase58());
-  console.log("mint =", mint.toBase58());
-  console.log("Constants.TREASURY =", Constants.TREASURY);
   const txHash = await program.methods
-    .initialize(admin.publicKey)
+    .initialize(admin.publicKey,
+      new PublicKey(Constants.BTC_PYTH_ACCOUNT),
+      new PublicKey(Constants.ETH_PYTH_ACCOUNT),
+      new PublicKey(Constants.SOL_PYTH_ACCOUNT),
+      new PublicKey(Constants.AVAX_PYTH_ACCOUNT),
+      new PublicKey(Constants.ADA_PYTH_ACCOUNT)
+    )
     .accounts({
       authority: admin.publicKey,
       globalState: globalStateKey,
@@ -55,7 +55,6 @@ const init = async () => {
       tokenMint: mint,
       rankMint: feelMint,
       treasury: new PublicKey(Constants.TREASURY),
-      pythAccount: new PublicKey(Constants.SOL_PYTH_ACCOUNT),
       tokenProgram: TOKEN_PROGRAM_ID,
       associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
       systemProgram: SystemProgram.programId,

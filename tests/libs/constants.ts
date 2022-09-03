@@ -32,3 +32,16 @@ export const TREASURY = "5de42qodN5hDg2yYWVzFcHsVzv2dNGLt29QymSeY1Pzn";
 export const MetadataProgramId = "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
 
 export const BUNDLE_REWARD_COUNT = [1, 2, 1, 2, 1, 2];
+
+const DEVNET_MODE = false;
+export const SOL_PYTH_ACCOUNT = DEVNET_MODE ? "J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix" :
+        "H6ARHf6YXhGYeQfUzQNGk6rDNnLBQKrenN712K4AQJEG";
+export const BTC_PYTH_ACCOUNT = DEVNET_MODE ? "HovQMDrbAgAYPCmHVSrezcSmkMtXSSUsLDFANExrZh2J" :
+        "GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU";
+export const ETH_PYTH_ACCOUNT = DEVNET_MODE ? "EdVCmQ9FSPcVe5YySXDPCRmc8aDQLKJ9xvYBMZPie1Vw" :
+        "JBu1AL4obBcCMqKBBxhpWCNUt136ijcuMZLFvTP7iWdB";
+export const AVAX_PYTH_ACCOUNT = DEVNET_MODE ? "FVb5h1VmHPfVb1RfqZckchq18GxRv4iKt8T4eVTQAqdz" :
+        "Ax9ujW5B9oqcv59N8m6f1BpTBq2rGeGaBcpKjC5UYsXU";
+export const ADA_PYTH_ACCOUNT = DEVNET_MODE ? "8oGTURNmSQkrBS1AQ5NjB2p8qY34UVmMA9ojrw8vnHus" :
+        "3pyn4svBbxJ9Wnn3RVeafyLWfzie6yC5eTig2S62v9SC";
+

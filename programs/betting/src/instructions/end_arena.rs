@@ -18,7 +18,7 @@ pub struct EndArena<'info> {
         seeds = [GLOBAL_STATE_SEED],
         bump,
         has_one = authority,
-        has_one = pyth_account,
+        has_one = sol_pyth_account,
         has_one = treasury,
         has_one = token_mint
     )]
@@ -32,7 +32,7 @@ pub struct EndArena<'info> {
     pub arena_state: Box<Account<'info, ArenaState>>,
 
     /// CHECK:
-    pub pyth_account: AccountInfo<'info>,
+    pub sol_pyth_account: AccountInfo<'info>,
 
     /// CHECK:
     pub treasury: AccountInfo<'info>,
@@ -86,7 +86,7 @@ pub fn handler(ctx: Context<EndArena>, arena_id: u64) -> Result<()> {
     let current_time = Clock::get()?.unix_timestamp as u64;
 
     let accts = ctx.accounts;
-    let pyth_price_info = &accts.pyth_account;
+    let pyth_price_info = &accts.sol_pyth_account;
     let pyth_price_data = &pyth_price_info.try_borrow_data()?;
     let pyth_price = pyth_client::cast::<pyth_client::Price>(pyth_price_data);
 

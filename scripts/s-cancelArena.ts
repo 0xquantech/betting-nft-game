@@ -27,7 +27,7 @@ const cancelArena = async (arenaId: number) => {
       authority: admin.publicKey,
       globalState: globalStateKey,
       arenaState: await keys.getArenaStateKey(arenaId),
-      pythAccount: Constants.SOL_PYTH_ACCOUNT,
+      solPythAccount: Constants.SOL_PYTH_ACCOUNT,
     })
     .signers([admin])
     .rpc();
