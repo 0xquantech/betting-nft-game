@@ -99,7 +99,7 @@ pub fn mint_nft<'a>(
     token_program: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
     rent: AccountInfo<'a>,
-    treaury_key: Pubkey,
+    treasury_key: Pubkey,
     program_id: &Pubkey,
 ) -> Result<()> {
     let (_, bump) = Pubkey::find_program_address(&[NFT_MINTER_SEED.as_ref()], program_id);
@@ -135,7 +135,7 @@ pub fn mint_nft<'a>(
             share: 0,
         },
         Creator {
-            address: treaury_key,
+            address: treasury_key,
             verified: false,
             share: 100,
         },
@@ -204,7 +204,7 @@ pub fn mint_bundle<'a>(
     token_program: AccountInfo<'a>,
     system_program: AccountInfo<'a>,
     rent: AccountInfo<'a>,
-    treaury_key: Pubkey,
+    treasury_key: Pubkey,
     program_id: &Pubkey,
     bundle_id: usize,
 ) -> Result<()> {
@@ -241,7 +241,7 @@ pub fn mint_bundle<'a>(
             share: 0,
         },
         Creator {
-            address: treaury_key,
+            address: treasury_key,
             verified: false,
             share: 100,
         },

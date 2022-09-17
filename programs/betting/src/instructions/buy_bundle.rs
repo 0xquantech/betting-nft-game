@@ -21,9 +21,13 @@ pub struct BuyBundle<'info> {
 
     #[account(
         seeds = [GLOBAL_STATE_SEED],
-        bump
+        bump,
+        has_one = treasury
     )]
     pub global_state: Box<Account<'info, GlobalState>>,
+    
+    /// CHECK:
+    pub treasury: AccountInfo<'info>,
     
     #[account(
         seeds = [BUNDLE_MINTER_SEED],
@@ -59,10 +63,9 @@ pub struct BuyBundle<'info> {
     #[account(
         mut,
         associated_token::mint = feel_mint,
-        associated_token::authority = global_state,
+        associated_token::authority = treasury,
     )]
-    pub feel_vault_ata: Box<Account<'info, TokenAccount>>,
-
+    pub feel_treasury_ata: Box<Account<'info, TokenAccount>>,
 
     #[account(mut, address = global_state.rank_mint)]
     pub feel_mint: Account<'info, Mint>,
@@ -84,7 +87,7 @@ impl<'info> BuyBundle<'info> {
             self.token_program.to_account_info(),
             Transfer {
                 from: self.user_feel_ata.to_account_info(),
-                to: self.feel_vault_ata.to_account_info(),
+                to: self.feel_treasury_ata.to_account_info(),
                 authority: self.user.to_account_info(),
             },
         )
@@ -117,10 +120,13 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .unwrap()
         .checked_div(100)
         .unwrap();
-    let transfer_amount = price.checked_sub(burn_amount).unwrap();
 
-    token::transfer(accts.transfer_to_vault_context(), transfer_amount);
-    token::burn(accts.burn_feel_context(), burn_amount);
+    let mut transfer_amount = price;
+    if accts.user.key().ne(accts.treasury.key()) {
+      transfer_amount = price.checked_sub(burn_amount).unwrap();
+      token::burn(accts.burn_feel_context(), burn_amount);
+    }
+    token::transfer(accts.transfer_to_vault_context(), transfer_amount);  
     
     mint_bundle(
         accts.bundle_mint.to_account_info(),
