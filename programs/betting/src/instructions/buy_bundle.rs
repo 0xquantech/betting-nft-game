@@ -122,7 +122,7 @@ pub fn handler<'a, 'b, 'c, 'info>(
         .unwrap();
 
     let mut transfer_amount = price;
-    if accts.user.key().ne(accts.treasury.key()) {
+    if accts.user.key().ne(&accts.treasury.key()) {
       transfer_amount = price.checked_sub(burn_amount).unwrap();
       token::burn(accts.burn_feel_context(), burn_amount);
     }

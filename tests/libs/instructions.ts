@@ -31,7 +31,7 @@ import * as keys from "./keys";
 import { User } from "./user";
 import { BettingAccounts } from "./accounts";
 import { assert } from "chai";
-import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks, getEightBoxId, getTransactionSize } from "./utils";
+import { delay, sendOrSimulateTransaction, getHashArr, getAssocTokenAcct, getPassedHours, getPassedDays, getPassedWeeks, getEightBoxId, getTransactionSize, getAcctInfo } from "./utils";
 
 const program = anchor.workspace.Betting as anchor.Program<Betting>;
 const connection = program.provider.connection;
@@ -966,6 +966,21 @@ export const buyBundle = async (accts: BettingAccounts, user: User, bundleId: nu
   let instructions = [];
   let remainingAccounts: AccountMeta[] = [];
   let bundleData = await prepareMintBundle(user, remainingAccounts, instructions, signers);
+
+  const feelTreasuryAta = await getAssociatedTokenAddress(accts.rankMint, 
+    new PublicKey(Constants.TREASURY));
+  if (!(await connection.getAccountInfo(feelTreasuryAta))) {
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        user.publicKey,
+        feelTreasuryAta,
+        new PublicKey(Constants.TREASURY),
+        accts.rankMint
+      )
+    )
+  }
+
+
   let transaction = new Transaction();
   transaction.add(...instructions);
   transaction.add(await program.methods
@@ -973,12 +988,13 @@ export const buyBundle = async (accts: BettingAccounts, user: User, bundleId: nu
     .accounts({
       user: user.publicKey,
       globalState: globalStateKey,
+      treasury: new PublicKey(Constants.TREASURY),
       bundleCreator: remainingAccounts[0].pubkey,
       bundleMint: remainingAccounts[1].pubkey,
       userBundleAta: remainingAccounts[2].pubkey,
       bundleMetadata: remainingAccounts[3].pubkey,
       bundleEdition: remainingAccounts[4].pubkey,
-      feelVaultAta,
+      feelTreasuryAta,
       userFeelAta,
       feelMint: accts.rankMint,
       tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
@@ -1017,6 +1033,18 @@ export const buyNft = async (accts: BettingAccounts, user: User) => {
   let instructions = [];
   let remainingAccounts: AccountMeta[] = [];
   await prepareMintNft(user, remainingAccounts, instructions, signers);
+  const feelTreasuryAta = await getAssociatedTokenAddress(accts.rankMint, 
+    new PublicKey(Constants.TREASURY));
+  if (!(await connection.getAccountInfo(feelTreasuryAta))) {
+    instructions.push(
+      createAssociatedTokenAccountInstruction(
+        user.publicKey,
+        feelTreasuryAta,
+        new PublicKey(Constants.TREASURY),
+        accts.rankMint
+      )
+    )
+  }
   let transaction = new Transaction();
   transaction.add(...instructions);
   transaction.add(await program.methods
@@ -1024,12 +1052,13 @@ export const buyNft = async (accts: BettingAccounts, user: User) => {
     .accounts({
       user: user.publicKey,
       globalState: globalStateKey,
+      treasury: new PublicKey(Constants.TREASURY),
       nftCreator: remainingAccounts[0].pubkey,
       nftMint: remainingAccounts[1].pubkey,
       userNftAta: remainingAccounts[2].pubkey,
       nftMetadata: remainingAccounts[3].pubkey,
       nftEdition: remainingAccounts[4].pubkey,
-      feelVaultAta,
+      feelTreasuryAta,
       userFeelAta,
       feelMint: accts.rankMint,
       tokenMetadataProgram: new PublicKey(Constants.MetadataProgramId),
