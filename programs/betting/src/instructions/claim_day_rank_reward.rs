@@ -30,7 +30,8 @@ pub struct ClaimDayRankReward<'info> {
     #[account(
       mut,
       seeds = [DAY_STATE_SEED, user.key().as_ref(), &day.to_le_bytes()],
-      bump
+      bump,
+      close = user
     )]
     pub user_day_state: Box<Account<'info, DayState>>,
 

@@ -8,5 +8,5 @@ pub struct UserState {
     pub is_ref_inited: u8,
 
     pub ref_reward: u64,
-    pub reserves: [u64; 7],
+    pub reserves: [u64; 4],
 }

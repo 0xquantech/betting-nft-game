@@ -224,5 +224,27 @@ pub mod betting {
     pub fn get_week_rank(ctx: Context<GetWeekRank>) -> Result<u8> {
         get_week_rank::handler(ctx)
     }
+
+    // close accounts
+    pub fn close_hour_result(ctx: Context<CloseHourResult>) -> Result<()> {
+      close_hour_result::handler(ctx)
+    }
+    
+    pub fn close_day_result(ctx: Context<CloseDayResult>) -> Result<()> {
+      close_day_result::handler(ctx)
+    }
+    
+    pub fn close_week_result(ctx: Context<CloseWeekResult>) -> Result<()> {
+      close_week_result::handler(ctx)
+    }
+
+    pub fn close_arena_state(ctx: Context<CloseArenaState>) -> Result<()> {
+      close_arena_state::handler(ctx)
+    }
+    
+    pub fn close_eight_box_state(ctx: Context<CloseEightBoxState>) -> Result<()> {
+      close_eight_box_state::handler(ctx)
+    }
+    
     
 }

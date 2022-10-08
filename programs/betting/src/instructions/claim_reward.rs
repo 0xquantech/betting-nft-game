@@ -30,6 +30,7 @@ pub struct ClaimReward<'info> {
       mut,
       seeds = [USER_BET_SEED, user.key().as_ref(), &arena_id.to_le_bytes()],
       bump,
+      close = user
     )]
     pub user_bet_state: Account<'info, UserBetState>,
 

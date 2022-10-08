@@ -8,6 +8,7 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   sendAndConfirmTransaction,
+  LAMPORTS_PER_SOL
 } from "@solana/web3.js";
 import {
   TOKEN_PROGRAM_ID,
@@ -1205,6 +1206,139 @@ export const buildNFT = async (
     false
   );
 };
+
+export const closeArenaState = async (
+  admin: User,
+  arenaId: number
+) => {
+  let preBal = (await connection.getBalance(admin.publicKey));
+  await sendOrSimulateTransaction(await program.methods
+    .closeArenaState()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      arenaState: await keys.getArenaStateKey(arenaId),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
+  );
+  
+  let pastBal = (await connection.getBalance(admin.publicKey));
+  console.log("Sol change: ", (pastBal - preBal) / LAMPORTS_PER_SOL);
+}
+
+
+export const closeDayResult = async (
+  admin: User,
+  day: number
+) => {
+  let preBal = (await connection.getBalance(admin.publicKey));
+
+  await sendOrSimulateTransaction(await program.methods
+    .closeDayResult()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      dayResult: await keys.getDayResultKey(day),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
+  );
+
+  let pastBal = (await connection.getBalance(admin.publicKey));
+  console.log("Sol change: ", (pastBal - preBal) / LAMPORTS_PER_SOL);
+
+}
+
+export const closeHourResult = async (
+  admin: User,
+  hour: number
+) => {
+
+  let preBal = (await connection.getBalance(admin.publicKey));
+  
+  await sendOrSimulateTransaction(await program.methods
+    .closeHourResult()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      hourResult: await keys.getHourResultKey(hour),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
+  );
+
+  let pastBal = (await connection.getBalance(admin.publicKey));
+  console.log("Sol change: ", (pastBal - preBal) / LAMPORTS_PER_SOL);
+
+}
+
+export const closeWeekResult = async (
+  admin: User,
+  week: number
+) => {
+  
+  let preBal = (await connection.getBalance(admin.publicKey));
+  
+  await sendOrSimulateTransaction(await program.methods
+    .closeWeekResult()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      weekResult: await keys.getWeekResultKey(week),
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
+  );
+
+  let pastBal = (await connection.getBalance(admin.publicKey));
+  console.log("Sol change: ", (pastBal - preBal) / LAMPORTS_PER_SOL);
+
+}
+
+export const closeEightBoxState = async (
+  admin: User,
+  userKey: PublicKey,
+  eight_box_id: number
+) => {
+  const boxStateKey = await keys.getEightBoxStateKey(userKey, eight_box_id)
+  let preBal = (await connection.getBalance(admin.publicKey));
+  
+  await sendOrSimulateTransaction(await program.methods
+    .closeEightBoxState()
+    .accounts({
+      authority: admin.publicKey,
+      globalState: await keys.getGlobalStateKey(),
+      eightBoxState: boxStateKey,
+      systemProgram: SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .signers([admin.keypair])
+    .transaction(),
+    [admin.keypair],
+    connection
+  );
+
+  let pastBal = (await connection.getBalance(admin.publicKey));
+  console.log("Sol change: ", (pastBal - preBal) / LAMPORTS_PER_SOL);
+
+}
 
 export const fetchData = async (type: string, key: PublicKey) => {
   return await program.account[type].fetchNullable(key);

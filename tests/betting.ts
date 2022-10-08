@@ -11,12 +11,13 @@ import {
   endArena,
   initializeProgram, startArena, userBet,
   openArena,
-  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward, buyNft
+  endHour, endDay, endWeek, claimHourRankReward, claimDayRankReward, claimWeekRankReward, claimRefReward, cancelArena, returnBet, partsToNft, buyBundle, openBundle, mintFragment, burnFragments, createFragmentMints, buildNFT, claimEightBoxReward, buyNft, closeArenaState, closeDayResult, closeHourResult, closeWeekResult, closeEightBoxState
 } from "./libs/instructions";
 
-import { delay } from "./libs/utils";
+import { delay, getEightBoxId, getPassedDays, getPassedHours, getPassedWeeks } from "./libs/utils";
 
 import { mintTo } from "@solana/spl-token";
+import { getEightBoxStateKey } from "../scripts/keys";
 
 chaiUse(chaiAsPromised);
 
@@ -212,4 +213,28 @@ describe("betting", () => {
      await buildNFT(bettingAccounts, admin);
   })
 
+  it("Close ArenaState Account", async () => {
+    await closeArenaState(admin, arenaId)
+  })
+
+  it("Close HourResult Account", async () => {
+    let hour = getPassedHours(Date.now());
+    await closeHourResult(admin, hour)
+  })
+  
+  it("Close DayResult Account", async () => {
+    let day = getPassedDays(Date.now());
+    await closeDayResult(admin, day)
+  })
+  
+  it("Close WeekResult Account", async () => {
+    let week = getPassedWeeks(Date.now());
+    await closeWeekResult(admin, week)
+  })
+  
+  it("Close EightBoxState Account", async () => {  
+    let eight_box_id = getEightBoxId(Date.now());
+    await closeEightBoxState(admin, userA.publicKey, eight_box_id)
+  })
+  
 });

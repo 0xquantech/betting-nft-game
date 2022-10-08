@@ -85,3 +85,7 @@ pub use mint_fragment::*;
 
 pub mod create_fragment_mints;
 pub use create_fragment_mints::*;
+
+// close accounts
+pub mod close_accounts;
+pub use close_accounts::*;

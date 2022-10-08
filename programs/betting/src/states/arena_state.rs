@@ -19,5 +19,5 @@ pub struct ArenaState {
     pub end_timestamp: u64,
     pub bet_result: u8,
 
-    pub reserves: [u64; 12],
+    pub reserves: [u64; 4],
 }

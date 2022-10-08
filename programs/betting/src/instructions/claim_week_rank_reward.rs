@@ -29,7 +29,8 @@ pub struct ClaimWeekRankReward<'info> {
     #[account(
       mut,
       seeds = [WEEK_STATE_SEED, user.key().as_ref(), &week.to_le_bytes()],
-      bump
+      bump,
+      close = user
     )]
     pub user_week_state: Box<Account<'info, WeekState>>,
 

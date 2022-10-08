@@ -31,7 +31,8 @@ pub struct ClaimHourRankReward<'info> {
     #[account(
       mut,
       seeds = [HOUR_STATE_SEED, user.key().as_ref(), &hour.to_le_bytes()],
-      bump
+      bump,
+      close = user
     )]
     pub user_hour_state: Box<Account<'info, HourState>>,
 
